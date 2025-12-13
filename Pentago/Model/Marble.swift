@@ -1,0 +1,33 @@
+//
+//  Marble.swift
+//  Pentago
+//
+//  Created by Tyrique Zimbizi on 12/12/2025.
+//
+
+import Foundation
+
+struct Marble
+{
+    let marbleOwner: PlayerProfile
+    let marbleColour: MarbleColour
+    
+    init(marbleOwner: PlayerProfile, marbleColour: MarbleColour)
+    {
+        self.marbleOwner = marbleOwner
+        self.marbleColour = marbleColour
+    }
+    
+    enum MarbleColour
+    {
+        case black
+        case blue
+        case green
+        case orange
+        case pink
+        case purple
+        case red
+        case yellow
+        case grey
+    }
+}
