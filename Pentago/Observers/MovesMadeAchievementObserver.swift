@@ -16,7 +16,7 @@ class MovesMadeAchievementObserver: AchievementObserver
     
     func updateAchievements(playerProfile: PlayerProfile) -> Achievement?
     {
-        let stringMovesMadeKey = String(playerProfile.getTotalMovesMade())
+        let stringMovesMadeKey = String(playerProfile.totalMovesMade)
         let desiredAchievement = movesMadeAchievementDict[stringMovesMadeKey]
         
         if(desiredAchievement != nil)

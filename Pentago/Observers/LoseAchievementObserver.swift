@@ -16,7 +16,7 @@ class LoseAchievementObserver: AchievementObserver
     
     func updateAchievements(playerProfile: PlayerProfile) -> Achievement?
     {
-        let stringLossKey = String(playerProfile.getNumLosses())
+        let stringLossKey = String(playerProfile.numLosses)
         let desiredAchievement = loseAchievementsDict[stringLossKey]
         
         if(desiredAchievement != nil)

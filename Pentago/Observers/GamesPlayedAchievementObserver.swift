@@ -16,7 +16,7 @@ class GamesPlayedAchievementObserver: AchievementObserver
     
     func updateAchievements(playerProfile: PlayerProfile) -> Achievement?
     {
-        let stringGamesPlayedKey = String(playerProfile.getNumGamesPlayed())
+        let stringGamesPlayedKey = String(playerProfile.numGamesPlayed)
         let desiredAchievement = gamesPlayedAchievementDict[stringGamesPlayedKey]
         
         if(desiredAchievement != nil)

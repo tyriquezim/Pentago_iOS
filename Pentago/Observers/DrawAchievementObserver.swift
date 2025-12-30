@@ -16,7 +16,7 @@ class DrawAchievementObserver: AchievementObserver
     
     func updateAchievements(playerProfile: PlayerProfile) -> Achievement?
     {
-        let stringDrawKey = String(playerProfile.getNumDraws())
+        let stringDrawKey = String(playerProfile.numDraws)
         let desiredAchievement =  self.drawAchievementsDict[stringDrawKey]
         
         if(desiredAchievement != nil)

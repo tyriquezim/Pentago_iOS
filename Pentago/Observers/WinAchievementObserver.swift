@@ -16,7 +16,7 @@ class WinAchievementObserver: AchievementObserver
     
     func updateAchievements(playerProfile: PlayerProfile) -> Achievement?
     {
-        let stringNumWinsKey = String(playerProfile.getNumWins())
+        let stringNumWinsKey = String(playerProfile.numWins)
         let desiredAchievement = winAchievementsDict[stringNumWinsKey]
         
         if(desiredAchievement != nil)

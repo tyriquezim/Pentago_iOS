@@ -16,7 +16,7 @@ class AchievementsEarnedAchievementObserver: AchievementObserver
     
     func updateAchievements(playerProfile: PlayerProfile) -> Achievement?
     {
-        let stringAchievementsEarnedKey = String(playerProfile.getNumAchievementsEarned())
+        let stringAchievementsEarnedKey = String(playerProfile.numAchievementsEarned)
         let desiredAchievement = self.achievementsEarnedDict[stringAchievementsEarnedKey]
         
         if(desiredAchievement != nil)
