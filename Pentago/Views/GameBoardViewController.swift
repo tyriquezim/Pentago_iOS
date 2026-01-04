@@ -27,6 +27,12 @@ class GameBoardViewController: UIViewController
     var gamePhase: GamePhase!
     var selectedSubgridCollectionView: UICollectionView? //The grid that is to be rotated
     
+    //These are to store the rotations since the property animations only apply them to the subgrids original position
+    var upperLeftSubgridRotationMultiplier: CGFloat!
+    var upperRightSubgridRotationMultiplier: CGFloat!
+    var lowerLeftSubgridRotationMultiplier: CGFloat!
+    var lowerRightSubgridRotationMultiplier: CGFloat!
+    
     override func viewDidLoad()
     {
         super.viewDidLoad()
@@ -40,6 +46,11 @@ class GameBoardViewController: UIViewController
         self.upperRightSubgrid.delegate = self
         self.lowerLeftSubgrid.delegate = self
         self.lowerRightSubgrid.delegate = self
+        
+        self.upperLeftSubgridRotationMultiplier = CGFloat.zero
+        self.upperRightSubgridRotationMultiplier = CGFloat.zero
+        self.lowerLeftSubgridRotationMultiplier = CGFloat.zero
+        self.lowerRightSubgridRotationMultiplier = CGFloat.zero
         
         self.upperLeftSubgrid.isScrollEnabled = true
         self.upperRightSubgrid.isScrollEnabled = false
@@ -61,6 +72,152 @@ class GameBoardViewController: UIViewController
         anticlockwiseImageView.transform = CGAffineTransform(scaleX: -1, y: 1) //Mirrors the image view so the arrow is pointing in the other direction
         self.anticlockwiseImageView.isUserInteractionEnabled = true
         self.clockwiseImageView.isUserInteractionEnabled = true
+        
+        let clockwiseTapRecog = UITapGestureRecognizer(target: self, action: #selector(clockwiseRotationAnimation))
+        let anticlockiwiseTapRecog = UITapGestureRecognizer(target: self, action: #selector(anticlockwiseRotationAnimation))
+        
+        self.clockwiseImageView.addGestureRecognizer(clockwiseTapRecog)
+        self.anticlockwiseImageView.addGestureRecognizer(anticlockiwiseTapRecog)
+    }
+    
+    //Passing nil means it will rotate the selected one
+    @objc func clockwiseRotationAnimation()
+    {
+        var rotationAnimator: UIViewPropertyAnimator? = nil
+        
+        if(self.selectedSubgridCollectionView === self.upperLeftSubgrid)
+        {
+            self.upperLeftSubgridRotationMultiplier += CGFloat.pi / 2
+            
+            rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
+            {
+                self.selectedSubgridCollectionView?.transform = CGAffineTransform(rotationAngle: self.upperLeftSubgridRotationMultiplier)
+            }
+        }
+        else
+        {
+            if(self.selectedSubgridCollectionView === self.upperRightSubgrid)
+            {
+                self.upperRightSubgridRotationMultiplier += CGFloat.pi / 2
+                
+                rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
+                {
+                    self.selectedSubgridCollectionView?.transform = CGAffineTransform(rotationAngle: self.upperRightSubgridRotationMultiplier)
+                }
+            }
+            else
+            {
+                if(self.selectedSubgridCollectionView === self.lowerLeftSubgrid)
+                {
+                    self.lowerLeftSubgridRotationMultiplier += CGFloat.pi / 2
+                    
+                    rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
+                    {
+                        self.selectedSubgridCollectionView?.transform = CGAffineTransform(rotationAngle: self.lowerLeftSubgridRotationMultiplier)
+                    }
+                }
+                else
+                {
+                    if(self.selectedSubgridCollectionView === self.lowerRightSubgrid)
+                    {
+                        self.lowerRightSubgridRotationMultiplier += CGFloat.pi / 2
+                        
+                        rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
+                        {
+                            self.selectedSubgridCollectionView?.transform = CGAffineTransform(rotationAngle: self.lowerRightSubgridRotationMultiplier)
+                        }
+                    }
+                }
+            }
+        }
+        rotationAnimator!.startAnimation()
+    }
+    
+    @objc func anticlockwiseRotationAnimation()
+    {
+        var rotationAnimator: UIViewPropertyAnimator? = nil
+        
+        if(self.selectedSubgridCollectionView === self.upperLeftSubgrid)
+        {
+            self.upperLeftSubgridRotationMultiplier -= CGFloat.pi / 2
+            
+            rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
+            {
+                self.selectedSubgridCollectionView?.transform = CGAffineTransform(rotationAngle: self.upperLeftSubgridRotationMultiplier)
+            }
+        }
+        else
+        {
+            if(self.selectedSubgridCollectionView === self.upperRightSubgrid)
+            {
+                self.upperRightSubgridRotationMultiplier -= CGFloat.pi / 2
+                
+                rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
+                {
+                    self.selectedSubgridCollectionView?.transform = CGAffineTransform(rotationAngle: self.upperRightSubgridRotationMultiplier)
+                }
+            }
+            else
+            {
+                if(self.selectedSubgridCollectionView === self.lowerLeftSubgrid)
+                {
+                    self.lowerLeftSubgridRotationMultiplier -= CGFloat.pi / 2
+                    
+                    rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
+                    {
+                        self.selectedSubgridCollectionView?.transform = CGAffineTransform(rotationAngle: self.lowerLeftSubgridRotationMultiplier)
+                    }
+                }
+                else
+                {
+                    if(self.selectedSubgridCollectionView === self.lowerRightSubgrid)
+                    {
+                        self.lowerRightSubgridRotationMultiplier -= CGFloat.pi / 2
+                        
+                        rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
+                        {
+                            self.selectedSubgridCollectionView?.transform = CGAffineTransform(rotationAngle: self.lowerRightSubgridRotationMultiplier)
+                        }
+                    }
+                }
+            }
+        }
+        rotationAnimator!.startAnimation()
+    }
+    
+    func targetedClockwiseRotationAnimation(subgrid: GameBoard.Subgrid)
+    {
+        
+    }
+    
+    func targetedAnticlockwiseRotationAnimation(subgrid: GameBoard.Subgrid)
+    {
+        
+    }
+    
+    func resizeAnimation(collectionView: UICollectionView)
+    {
+        
+    }
+    
+    func rotateAnimation(collectionView: UICollectionView, rotationDirection: GameBoard.RotationDirection)
+    {
+        
+    }
+    
+    enum GamePhase
+    {
+        case placeMarble
+        case rotateSubgid
+        case animationOccuring
+        case aiTurn
+    }
+    
+    enum Duration: Double
+    {
+        case gridRotationDuration = 1.5 //Seconds
+        case placeMarbleWait = 0.75 //Seconds
+        case rotateSubgridWait = 1
     }
 }
 
@@ -83,7 +240,7 @@ extension GameBoardViewController: UICollectionViewDelegate
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt index: IndexPath)
     {
-        var cell = collectionView.cellForItem(at: index) as! GameBoardCollectionViewCell
+        let cell = collectionView.cellForItem(at: index) as! GameBoardCollectionViewCell
         
         if(gamePhase == .placeMarble)
         {
@@ -136,6 +293,8 @@ extension GameBoardViewController: UICollectionViewDelegate
                 
                 self.selectedSubgridCollectionView = collectionView
                 self.rotationStackView.isHidden = false
+                
+                self.gameStatusLabel.text = GameStateInfoStore.rotationInstruction.rawValue
             }
         }
     }
@@ -248,25 +407,5 @@ extension GameBoardViewController: UICollectionViewDataSource
         }
         
         return cell
-    }
-    
-    enum GamePhase
-    {
-        case placeMarble
-        case rotateSubgid
-        case animationOccuring
-        case aiTurn
-    }
-    
-    enum AnimationDuration: Int
-    {
-        case gridResizeDuration = 500 //Milliseconds
-        case gridRotationDuation = 1500
-    }
-    
-    enum AIWaitDuration: Int
-    {
-        case placeMarbleWait = 750 //Milliseconds
-        case rotateSubgridWait = 1000
     }
 }
