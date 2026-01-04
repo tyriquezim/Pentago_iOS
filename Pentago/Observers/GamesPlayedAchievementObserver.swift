@@ -5,19 +5,19 @@
 //  Created by Tyrique Zimbizi on 14/12/2025.
 //
 
-class GamesPlayedAchievementObserver: AchievementObserver
+struct GamesPlayedAchievementObserver: AchievementObserver
 {
-    var gamesPlayedAchievementDict: Dictionary<String, Achievement>
+    var achievementsDict: Dictionary<String, Achievement>
     
     init()
     {
-        self.gamesPlayedAchievementDict = Dictionary<String, Achievement>()
+        self.achievementsDict = Dictionary<String, Achievement>()
     }
     
     func updateAchievements(playerProfile: PlayerProfile) -> Achievement?
     {
         let stringGamesPlayedKey = String(playerProfile.numGamesPlayed)
-        let desiredAchievement = gamesPlayedAchievementDict[stringGamesPlayedKey]
+        let desiredAchievement = achievementsDict[stringGamesPlayedKey]
         
         if(desiredAchievement != nil)
         {
@@ -27,28 +27,28 @@ class GamesPlayedAchievementObserver: AchievementObserver
         return desiredAchievement
     }
     
-    func addAchievement(key: Int, achievement: Achievement)
+    mutating func addAchievement(key: Int, achievement: Achievement)
     {
         let stringKey = String(key)
-        self.gamesPlayedAchievementDict[stringKey] = achievement
+        self.achievementsDict[stringKey] = achievement
     }
     
-    func removeAchievement(key: Int)
+    mutating func removeAchievement(key: Int)
     {
         let stringKey = String(key)
-        self.gamesPlayedAchievementDict.removeValue(forKey: stringKey)
+        self.achievementsDict.removeValue(forKey: stringKey)
     }
     
     func getAchievement(key: Int) -> Achievement?
     {
         let stringKey = String(key)
-        let desiredAchievement = self.gamesPlayedAchievementDict[stringKey]
+        let desiredAchievement = self.achievementsDict[stringKey]
         
         return desiredAchievement
     }
     
     func getAchievementArray() -> Array<Achievement>
     {
-        return Array<Achievement>(gamesPlayedAchievementDict.values)
+        return Array<Achievement>(achievementsDict.values)
     }
 }

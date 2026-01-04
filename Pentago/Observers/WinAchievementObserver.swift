@@ -5,19 +5,19 @@
 //  Created by Tyrique Zimbizi on 14/12/2025.
 //
 
-class WinAchievementObserver: AchievementObserver
+struct WinAchievementObserver: AchievementObserver
 {
-    var winAchievementsDict: Dictionary<String, Achievement>
+    var achievementsDict: Dictionary<String, Achievement>
     
     init()
     {
-        self.winAchievementsDict = Dictionary<String, Achievement>()
+        self.achievementsDict = Dictionary<String, Achievement>()
     }
     
     func updateAchievements(playerProfile: PlayerProfile) -> Achievement?
     {
         let stringNumWinsKey = String(playerProfile.numWins)
-        let desiredAchievement = winAchievementsDict[stringNumWinsKey]
+        let desiredAchievement = achievementsDict[stringNumWinsKey]
         
         if(desiredAchievement != nil)
         {
@@ -27,28 +27,28 @@ class WinAchievementObserver: AchievementObserver
         return desiredAchievement
     }
     
-    func addAchievement(key: Int, achievement: Achievement)
+    mutating func addAchievement(key: Int, achievement: Achievement)
     {
         let stringKey = String(key)
-        self.winAchievementsDict[stringKey] = achievement
+        self.achievementsDict[stringKey] = achievement
     }
     
-    func removeAchievement(key: Int)
+    mutating func removeAchievement(key: Int)
     {
         let stringKey = String(key)
-        self.winAchievementsDict.removeValue(forKey: stringKey)
+        self.achievementsDict.removeValue(forKey: stringKey)
     }
     
     func getAchievement(key: Int) -> Achievement?
     {
         let stringKey = String(key)
-        let desiredAchievement = self.winAchievementsDict[stringKey]
+        let desiredAchievement = self.achievementsDict[stringKey]
         
         return desiredAchievement
     }
     
     func getAchievementArray() -> Array<Achievement>
     {
-        return Array<Achievement>(winAchievementsDict.values)
+        return Array<Achievement>(achievementsDict.values)
     }
 }

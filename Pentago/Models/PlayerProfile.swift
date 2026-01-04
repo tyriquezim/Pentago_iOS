@@ -138,7 +138,20 @@ class PlayerProfile
     }
     
     //Player Statistics Wrappers
+    func addAchievementObservers(achievementObservers: Array<AchievementObserver>)
+    {
+        self.playerStats.addAchievementObservers(achievementObservers: achievementObservers)
+    }
     
+    func addAchievementObserver(achievementObserver: AchievementObserver)
+    {
+        self.playerStats.addAchievementObserver(achievementObserver: achievementObserver)
+    }
+    
+    func removeAchievementObserver(index: Int)
+    {
+        self.playerStats.removeAchievementObserver(index: index)
+    }
     
     private struct PlayerStatistics
     {
@@ -175,7 +188,21 @@ class PlayerProfile
             
             return achievementsArray
         }
-        var winPercentage: Double {return Double(numWins) / Double(numGamesPlayed)}
+        var winPercentage: Double
+        {
+            var perc: Double
+            
+            if(self.numGamesPlayed == 0)
+            {
+                perc = 0
+            }
+            else
+            {
+                perc = Double(self.numWins) / Double(self.numGamesPlayed)
+            }
+            
+            return perc
+        }
         var achievementObserverArray: Array<AchievementObserver>
         
         init()
@@ -227,7 +254,12 @@ class PlayerProfile
             return earnedAchievementArray
         }
         
-        mutating func addAchievementObservers(achievementObserver: AchievementObserver)
+        mutating func addAchievementObservers(achievementObservers: Array<AchievementObserver>)
+        {
+            self.achievementObserverArray.append(contentsOf: achievementObservers)
+        }
+        
+        mutating func addAchievementObserver(achievementObserver: AchievementObserver)
         {
             self.achievementObserverArray.append(achievementObserver)
         }

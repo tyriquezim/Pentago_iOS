@@ -5,19 +5,19 @@
 //  Created by Tyrique Zimbizi on 14/12/2025.
 //
 
-class AchievementsEarnedAchievementObserver: AchievementObserver
+struct AchievementsEarnedAchievementObserver: AchievementObserver
 {
-    var achievementsEarnedDict: Dictionary<String, Achievement>
+    var achievementsDict: Dictionary<String, Achievement>
     
     init()
     {
-        self.achievementsEarnedDict = Dictionary<String, Achievement>()
+        self.achievementsDict = Dictionary<String, Achievement>()
     }
     
     func updateAchievements(playerProfile: PlayerProfile) -> Achievement?
     {
         let stringAchievementsEarnedKey = String(playerProfile.numAchievementsEarned)
-        let desiredAchievement = self.achievementsEarnedDict[stringAchievementsEarnedKey]
+        let desiredAchievement = self.achievementsDict[stringAchievementsEarnedKey]
         
         if(desiredAchievement != nil)
         {
@@ -27,28 +27,28 @@ class AchievementsEarnedAchievementObserver: AchievementObserver
         return desiredAchievement
     }
     
-    func addAchievement(key: Int, achievement: Achievement)
+    mutating func addAchievement(key: Int, achievement: Achievement)
     {
         let stringKey = String(key)
-        self.achievementsEarnedDict[stringKey] = achievement
+        self.achievementsDict[stringKey] = achievement
     }
     
-    func removeAchievement(key: Int)
+    mutating func removeAchievement(key: Int)
     {
         let stringKey = String(key)
-        self.achievementsEarnedDict.removeValue(forKey: stringKey)
+        self.achievementsDict.removeValue(forKey: stringKey)
     }
     
     func getAchievement(key: Int) -> Achievement?
     {
         let stringKey = String(key)
-        let desiredAchievement = self.achievementsEarnedDict[stringKey]
+        let desiredAchievement = self.achievementsDict[stringKey]
         
         return desiredAchievement
     }
     
     func getAchievementArray() -> Array<Achievement>
     {
-        return Array<Achievement>(achievementsEarnedDict.values)
+        return Array<Achievement>(achievementsDict.values)
     }
 }

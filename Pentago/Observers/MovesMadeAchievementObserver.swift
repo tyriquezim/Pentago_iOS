@@ -5,19 +5,19 @@
 //  Created by Tyrique Zimbizi on 14/12/2025.
 //
 
-class MovesMadeAchievementObserver: AchievementObserver
+struct MovesMadeAchievementObserver: AchievementObserver
 {
-    var movesMadeAchievementDict: Dictionary<String, Achievement>
+    var achievementsDict: Dictionary<String, Achievement>
     
     init()
     {
-        self.movesMadeAchievementDict = Dictionary<String, Achievement>()
+        self.achievementsDict = Dictionary<String, Achievement>()
     }
     
     func updateAchievements(playerProfile: PlayerProfile) -> Achievement?
     {
         let stringMovesMadeKey = String(playerProfile.totalMovesMade)
-        let desiredAchievement = movesMadeAchievementDict[stringMovesMadeKey]
+        let desiredAchievement = achievementsDict[stringMovesMadeKey]
         
         if(desiredAchievement != nil)
         {
@@ -27,28 +27,28 @@ class MovesMadeAchievementObserver: AchievementObserver
         return desiredAchievement
     }
     
-    func addAchievement(key: Int, achievement: Achievement)
+    mutating func addAchievement(key: Int, achievement: Achievement)
     {
         let stringKey = String(key)
-        self.movesMadeAchievementDict[stringKey] = achievement
+        self.achievementsDict[stringKey] = achievement
     }
     
-    func removeAchievement(key: Int)
+    mutating func removeAchievement(key: Int)
     {
         let stringKey = String(key)
-        self.movesMadeAchievementDict.removeValue(forKey: stringKey)
+        self.achievementsDict.removeValue(forKey: stringKey)
     }
     
     func getAchievement(key: Int) -> Achievement?
     {
         let stringKey = String(key)
-        let desiredAchievement = self.movesMadeAchievementDict[stringKey]
+        let desiredAchievement = self.achievementsDict[stringKey]
         
         return desiredAchievement
     }
     
     func getAchievementArray() -> Array<Achievement>
     {
-        return Array<Achievement>(movesMadeAchievementDict.values)
+        return Array<Achievement>(achievementsDict.values)
     }
 }

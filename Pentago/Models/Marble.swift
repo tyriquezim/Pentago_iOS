@@ -18,7 +18,7 @@ struct Marble
         self.marbleColour = marbleColour
     }
     
-    enum MarbleColour
+    enum MarbleColour: CaseIterable
     {
         case black
         case blue
@@ -29,5 +29,19 @@ struct Marble
         case red
         case yellow
         case grey
+        
+        static func random() -> MarbleColour
+        {
+            let randomIndex = Int.random(in: 0..<allCases.count)
+            
+            return allCases[randomIndex]
+        }
+        
+        static func random(caseArray: Array<MarbleColour>) -> MarbleColour
+        {
+            let randomIndex = Int.random(in: 0..<caseArray.count)
+            
+            return caseArray[randomIndex]
+        }
     }
 }

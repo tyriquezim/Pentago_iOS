@@ -7,7 +7,7 @@
 
 import UIKit
 
-enum GameDisplayStatistic: String
+enum GameDisplayStatisticStore: String, CaseIterable
 {
     case achievementsEarned = "Achievements Earned"
     case draw = "Number of Draws"

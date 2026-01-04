@@ -7,11 +7,13 @@
 
 protocol AchievementObserver
 {
+    var achievementsDict: Dictionary<String, Achievement> {get set}
+    
     func updateAchievements(playerProfile: PlayerProfile) -> Achievement?
     
-    func addAchievement(key: Int, achievement: Achievement)
+    mutating func addAchievement(key: Int, achievement: Achievement)
     
-    func removeAchievement(key: Int)
+    mutating func removeAchievement(key: Int)
     
     func getAchievement(key: Int) -> Achievement?
     
