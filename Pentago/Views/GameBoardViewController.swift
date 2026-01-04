@@ -83,10 +83,19 @@ class GameBoardViewController: UIViewController
     //Passing nil means it will rotate the selected one
     @objc func clockwiseRotationAnimation()
     {
+        self.rotationStackView.isHidden = true //Prevents more rotations being initiated
+        
+        //Removes the highlighting
+        self.selectedSubgridCollectionView!.layer.borderWidth = 0
+        self.selectedSubgridCollectionView!.layer.borderColor = nil
+        self.selectedSubgridCollectionView!.layer.cornerRadius = 0
+        self.selectedSubgridCollectionView!.clipsToBounds = false
+        
         var rotationAnimator: UIViewPropertyAnimator? = nil
         
         if(self.selectedSubgridCollectionView === self.upperLeftSubgrid)
         {
+            self.gameController.rotateSubgrid(subgrid: .upperLeft, rotationDirection: .clockwise)
             self.upperLeftSubgridRotationMultiplier += CGFloat.pi / 2
             
             rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
@@ -98,6 +107,7 @@ class GameBoardViewController: UIViewController
         {
             if(self.selectedSubgridCollectionView === self.upperRightSubgrid)
             {
+                self.gameController.rotateSubgrid(subgrid: .upperRight, rotationDirection: .clockwise)
                 self.upperRightSubgridRotationMultiplier += CGFloat.pi / 2
                 
                 rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
@@ -109,6 +119,7 @@ class GameBoardViewController: UIViewController
             {
                 if(self.selectedSubgridCollectionView === self.lowerLeftSubgrid)
                 {
+                    self.gameController.rotateSubgrid(subgrid: .lowerLeft, rotationDirection: .clockwise)
                     self.lowerLeftSubgridRotationMultiplier += CGFloat.pi / 2
                     
                     rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
@@ -120,6 +131,7 @@ class GameBoardViewController: UIViewController
                 {
                     if(self.selectedSubgridCollectionView === self.lowerRightSubgrid)
                     {
+                        self.gameController.rotateSubgrid(subgrid: .lowerRight, rotationDirection: .clockwise)
                         self.lowerRightSubgridRotationMultiplier += CGFloat.pi / 2
                         
                         rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
@@ -130,15 +142,47 @@ class GameBoardViewController: UIViewController
                 }
             }
         }
+        rotationAnimator!.addCompletion()
+        {_ in
+            
+            //Updates the indices that get passed to the GameController.placeMarble function after rotation
+            for cell in self.selectedSubgridCollectionView!.visibleCells
+            {
+                let castCell = cell as! GameBoardCollectionViewCell
+                
+                castCell.updateGameBoardIndices(rotationDirection: .clockwise)
+            }
+            self.selectedSubgridCollectionView = nil
+            
+            if(self.gameController.gameBoard.isAgainstAiOpponent)
+            {
+                
+            }
+            else
+            {
+                self.gamePhase = .placeMarble
+                self.gameStatusLabel.text = GameStateInfoStore.placeMarbleInstruction.rawValue
+                self.playerTurnLabel.text = self.gameController.gameBoard.currentTurnPlayerProfile.userName + GameStateInfoStore.playerTurnTrailing.rawValue
+            }
+        }
         rotationAnimator!.startAnimation()
     }
     
     @objc func anticlockwiseRotationAnimation()
     {
+        self.rotationStackView.isHidden = true //Prevents more rotations being initiated
+        
+        //Removes the highlighting
+        self.selectedSubgridCollectionView!.layer.borderWidth = 0
+        self.selectedSubgridCollectionView!.layer.borderColor = nil
+        self.selectedSubgridCollectionView!.layer.cornerRadius = 0
+        self.selectedSubgridCollectionView!.clipsToBounds = false
+        
         var rotationAnimator: UIViewPropertyAnimator? = nil
         
         if(self.selectedSubgridCollectionView === self.upperLeftSubgrid)
         {
+            self.gameController.rotateSubgrid(subgrid: .upperLeft, rotationDirection: .anticlockwise)
             self.upperLeftSubgridRotationMultiplier -= CGFloat.pi / 2
             
             rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
@@ -150,6 +194,7 @@ class GameBoardViewController: UIViewController
         {
             if(self.selectedSubgridCollectionView === self.upperRightSubgrid)
             {
+                self.gameController.rotateSubgrid(subgrid: .upperRight, rotationDirection: .anticlockwise)
                 self.upperRightSubgridRotationMultiplier -= CGFloat.pi / 2
                 
                 rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
@@ -161,6 +206,7 @@ class GameBoardViewController: UIViewController
             {
                 if(self.selectedSubgridCollectionView === self.lowerLeftSubgrid)
                 {
+                    self.gameController.rotateSubgrid(subgrid: .lowerLeft, rotationDirection: .anticlockwise)
                     self.lowerLeftSubgridRotationMultiplier -= CGFloat.pi / 2
                     
                     rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
@@ -172,6 +218,7 @@ class GameBoardViewController: UIViewController
                 {
                     if(self.selectedSubgridCollectionView === self.lowerRightSubgrid)
                     {
+                        self.gameController.rotateSubgrid(subgrid: .lowerRight, rotationDirection: .anticlockwise)
                         self.lowerRightSubgridRotationMultiplier -= CGFloat.pi / 2
                         
                         rotationAnimator = UIViewPropertyAnimator(duration: Duration.gridRotationDuration.rawValue, curve: .easeInOut)
@@ -180,6 +227,28 @@ class GameBoardViewController: UIViewController
                         }
                     }
                 }
+            }
+        }
+        rotationAnimator!.addCompletion()
+        {_ in
+            //Updates the indices that get passed to the GameController.placeMarble function after rotation
+            for cell in self.selectedSubgridCollectionView!.visibleCells
+            {
+                let castCell = cell as! GameBoardCollectionViewCell
+                
+                castCell.updateGameBoardIndices(rotationDirection: .anticlockwise)
+            }
+            self.selectedSubgridCollectionView = nil
+            
+            if(self.gameController.gameBoard.isAgainstAiOpponent)
+            {
+                
+            }
+            else
+            {
+                self.gamePhase = .placeMarble
+                self.gameStatusLabel.text = GameStateInfoStore.placeMarbleInstruction.rawValue
+                self.playerTurnLabel.text = self.gameController.gameBoard.currentTurnPlayerProfile.userName + GameStateInfoStore.playerTurnTrailing.rawValue
             }
         }
         rotationAnimator!.startAnimation()
@@ -241,7 +310,10 @@ extension GameBoardViewController: UICollectionViewDelegate
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt index: IndexPath)
     {
         let cell = collectionView.cellForItem(at: index) as! GameBoardCollectionViewCell
-        
+        print(cell.currentCellType)
+        print(cell.gameBoardRowIndex)
+        print(cell.gameBoardColumnIndex)
+        print(gameController.gameBoard.gameGrid[cell.gameBoardRowIndex][cell.gameBoardColumnIndex])
         if(gamePhase == .placeMarble)
         {
             do
@@ -259,10 +331,12 @@ extension GameBoardViewController: UICollectionViewDelegate
             catch let GameBoardException.CellOccupied(message)
             {
                 //Notify the user
+                fatalError(message)
             }
             catch let GameBoardException.GameGridFull(message)
             {
                 //notify the user
+                fatalError(message)
             }
             catch
             {
@@ -310,6 +384,7 @@ extension GameBoardViewController: UICollectionViewDataSource
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell
     {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "GameBoardCollectionViewCell", for: indexPath) as! GameBoardCollectionViewCell
+        
         var rowIndex: Int? = nil
         var columnIndex: Int? = nil
         var rowIndexOffset: Int? = nil

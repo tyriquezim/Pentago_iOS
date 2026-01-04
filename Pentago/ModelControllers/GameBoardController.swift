@@ -14,7 +14,7 @@ class GameBoardController
         self.gameBoard = gameBoard
     }
     
-    func updateTurns()
+    private func updateTurns()
     {
         if(self.gameBoard.currentTurnPlayerProfile === self.gameBoard.player1Profile)
         {
