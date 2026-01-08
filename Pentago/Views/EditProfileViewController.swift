@@ -14,6 +14,7 @@ class EditProfileViewController: UIViewController
     @IBOutlet var usernameLabel: UILabel!
     @IBOutlet var colourLabel: UILabel!
     @IBOutlet var playerIDLabel: UILabel!
+    @IBOutlet var deleteProfileButton: UIButton!
     @IBOutlet var profileEditTableView: UITableView!
     var activeTextField: UITextField? //Stores the textField instance currently being used by the user
     
@@ -42,6 +43,22 @@ class EditProfileViewController: UIViewController
         {_ in
             self.onBackButtonTap()
         }
+    }
+    
+    @IBAction func onDeleteButtonTap(deleteButton: UIButton)
+    {
+        let alert = UIAlertController(title: "Delete Profile", message: "Are you sure you want to delete this profile? This action cannot be undone.", preferredStyle: .alert)
+        let deleteConfirmAction = UIAlertAction(title: "Yes", style: .destructive)
+        {_ in
+            self.sourceProfile.manager = nil //This manager will remove it automatically
+            self.navigationController!.popViewController(animated: true)
+        }
+        let deleteDenyAction = UIAlertAction(title: "No", style: .default)
+        
+        alert.addAction(deleteConfirmAction)
+        alert.addAction(deleteDenyAction)
+        
+        self.present(alert, animated: true, completion: nil)
     }
     
     func onBackButtonTap()

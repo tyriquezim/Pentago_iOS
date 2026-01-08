@@ -34,7 +34,7 @@ class OpponentSelectViewController: UIViewController
         {
             if(player1.marbleColour == player2.marbleColour)
             {
-                let alert = UIAlertController(title: "Change Colour", message: "Both players cannot have the same marble colour. Currently both set to \(player1.marbleColour.rawValue)", preferredStyle: .alert)
+                let alert = UIAlertController(title: "Change Colour", message: "Both players cannot have the same marble colour. They are currently both set to \(player1.marbleColour.rawValue)", preferredStyle: .alert)
                 alert.addAction(UIAlertAction(title: "OK", style: .default))
                 self.present(alert, animated: true, completion: nil)
             }
