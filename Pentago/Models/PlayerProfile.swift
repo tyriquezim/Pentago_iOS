@@ -99,6 +99,7 @@ class PlayerProfile
     init(userName: String, profilePicture: ProfilePicture, marbleColour: Marble.MarbleColour)
     {
         self.playerID = UUID()
+        self.userName = userName
         self.profilePicture = profilePicture
         self.marbleColour = marbleColour
         self._isLocalPlayer1 = false
@@ -111,7 +112,7 @@ class PlayerProfile
     init(userName: String, profilePicture: ProfilePicture, marbleColour: Marble.MarbleColour, manager: PlayerProfileManager)
     {
         self.playerID = UUID()
-        self._userName = userName
+        self.userName = userName
         self.profilePicture = profilePicture
         self.marbleColour = marbleColour
         self._isLocalPlayer1 = false

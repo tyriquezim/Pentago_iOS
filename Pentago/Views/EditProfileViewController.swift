@@ -54,7 +54,6 @@ class EditProfileViewController: UIViewController
         }
         else
         {
-            print(self.sourceProfile.userName)
             if(self.existingUsernames.contains(self.sourceProfile.userName))
             {
                 let alert = UIAlertController(title: "Change Username", message: "The username, \"\(self.sourceProfile.userName)\" is already in use.", preferredStyle: .alert)
@@ -63,7 +62,7 @@ class EditProfileViewController: UIViewController
             }
             else
             {
-               // self.navigationController!.popViewController(animated: true)
+               self.navigationController!.popViewController(animated: true)
             }
         }
     }
