@@ -35,7 +35,7 @@ class GameBoardViewController: UIViewController
     var lowerRightSubgridRotationMultiplier: CGFloat!
     
     var snackbarFrame: CGRect!
-    var snackbarPopUpFrame: CGRect!
+    var snackbarVerticalTranslation: Double!
     var snackbarQueue: Array<SnackbarView>!
     
     override func viewDidLoad()
@@ -91,7 +91,7 @@ class GameBoardViewController: UIViewController
         
         self.snackbarFrame = CGRect(x: snackbarX, y: snackbarY, width: snackbarWidth, height: snackbarHeight)
         
-        self.snackbarPopUpFrame = CGRect(x: snackbarX, y: snackbarY - 70, width: snackbarWidth, height: snackbarHeight)
+        self.snackbarVerticalTranslation = 100
         
         snackbarQueue = Array()
     }
@@ -117,38 +117,42 @@ class GameBoardViewController: UIViewController
         
         rotationAnimator.addCompletion()
         {_ in
+            self.onSubgridRotate()
             //Updates the indices that get passed to the GameController.placeMarble function after rotation
-            for cell in self.selectedSubgridCollectionView!.visibleCells
+            if(self.gamePhase != .gameOver)
             {
-                let castCell = cell as! GameBoardCollectionViewCell
-                
-                castCell.updateGameBoardIndices(rotationDirection: .clockwise)
-            }
-            self.selectedSubgridCollectionView = nil
-            
-            if(self.gameController.gameBoard.isAgainstAiOpponent)
-            {
-                self.gamePhase = .aiTurn
-                self.gameStatusLabel.text = GameStateInfoStore.aiMoveIndicator.rawValue
-                self.playerTurnLabel.text = self.gameController.gameBoard.currentTurnPlayerProfile.userName + GameStateInfoStore.playerTurnTrailing.rawValue
-                DispatchQueue.main.asyncAfter(deadline: .now() + Duration.placeMarbleWait.rawValue)
+                for cell in self.selectedSubgridCollectionView!.visibleCells
                 {
-                    self.handleAITurn()
+                    let castCell = cell as! GameBoardCollectionViewCell
+                    
+                    castCell.updateGameBoardIndices(rotationDirection: .clockwise)
                 }
+                self.selectedSubgridCollectionView = nil
                 
-            }
-            else
-            {
-                self.gamePhase = .placeMarble
-                
-                //Makes the cells interactable again
-                self.upperLeftSubgrid.allowsSelection = true
-                self.upperRightSubgrid.allowsSelection = true
-                self.lowerLeftSubgrid.allowsSelection = true
-                self.lowerRightSubgrid.allowsSelection = true
-                
-                self.gameStatusLabel.text = GameStateInfoStore.placeMarbleInstruction.rawValue
-                self.playerTurnLabel.text = self.gameController.gameBoard.currentTurnPlayerProfile.userName + GameStateInfoStore.playerTurnTrailing.rawValue
+                if(self.gameController.gameBoard.isAgainstAiOpponent)
+                {
+                    self.gamePhase = .aiTurn
+                    self.gameStatusLabel.text = GameStateInfoStore.aiMoveIndicator.rawValue
+                    self.playerTurnLabel.text = self.gameController.gameBoard.currentTurnPlayerProfile.userName + GameStateInfoStore.playerTurnTrailing.rawValue
+                    DispatchQueue.main.asyncAfter(deadline: .now() + Duration.placeMarbleWait.rawValue)
+                    {
+                        self.handleAITurn()
+                    }
+                    
+                }
+                else
+                {
+                    self.gamePhase = .placeMarble
+                    
+                    //Makes the cells interactable again
+                    self.upperLeftSubgrid.allowsSelection = true
+                    self.upperRightSubgrid.allowsSelection = true
+                    self.lowerLeftSubgrid.allowsSelection = true
+                    self.lowerRightSubgrid.allowsSelection = true
+                    
+                    self.gameStatusLabel.text = GameStateInfoStore.placeMarbleInstruction.rawValue
+                    self.playerTurnLabel.text = self.gameController.gameBoard.currentTurnPlayerProfile.userName + GameStateInfoStore.playerTurnTrailing.rawValue
+                }
             }
         }
         self.gamePhase = .animationOccuring
@@ -172,48 +176,45 @@ class GameBoardViewController: UIViewController
         self.lowerRightSubgrid.allowsSelection = false
         
         
-        var rotationAnimator: UIViewPropertyAnimator = createRotationAnimator(rotationDirection: .anticlockwise) //Returns an animator that rotates the selected subgrid
+        let rotationAnimator: UIViewPropertyAnimator = createRotationAnimator(rotationDirection: .anticlockwise) //Returns an animator that rotates the selected subgrid
         
         rotationAnimator.addCompletion()
         {_ in
-            self.rotationStackView.isHidden = true //Prevents more rotations being initiated
+            self.onSubgridRotate()
             
-            //Removes the highlighting again incase the player tapped again
-            self.selectedSubgridCollectionView!.layer.borderWidth = 0
-            self.selectedSubgridCollectionView!.layer.borderColor = nil
-            self.selectedSubgridCollectionView!.layer.cornerRadius = 0
-            self.selectedSubgridCollectionView!.clipsToBounds = false
-            
-            //Updates the indices that get passed to the GameController.placeMarble function after rotation
-            for cell in self.selectedSubgridCollectionView!.visibleCells
+            if(self.gamePhase != .gameOver)
             {
-                let castCell = cell as! GameBoardCollectionViewCell
-                
-                castCell.updateGameBoardIndices(rotationDirection: .anticlockwise)
-            }
-            self.selectedSubgridCollectionView = nil
-            
-            if(self.gameController.gameBoard.isAgainstAiOpponent)
-            {
-                self.gamePhase = .aiTurn
-                self.gameStatusLabel.text = GameStateInfoStore.aiMoveIndicator.rawValue
-                self.playerTurnLabel.text = self.gameController.gameBoard.currentTurnPlayerProfile.userName + GameStateInfoStore.playerTurnTrailing.rawValue
-                DispatchQueue.main.asyncAfter(deadline: .now() + Duration.placeMarbleWait.rawValue)
+                //Updates the indices that get passed to the GameController.placeMarble function after rotation
+                for cell in self.selectedSubgridCollectionView!.visibleCells
                 {
-                    self.handleAITurn()
+                    let castCell = cell as! GameBoardCollectionViewCell
+                    
+                    castCell.updateGameBoardIndices(rotationDirection: .anticlockwise)
                 }
-            }
-            else
-            {
-                self.gamePhase = .placeMarble
+                self.selectedSubgridCollectionView = nil
                 
-                self.upperLeftSubgrid.allowsSelection = true
-                self.upperRightSubgrid.allowsSelection = true
-                self.lowerLeftSubgrid.allowsSelection = true
-                self.lowerRightSubgrid.allowsSelection = true
-                
-                self.gameStatusLabel.text = GameStateInfoStore.placeMarbleInstruction.rawValue
-                self.playerTurnLabel.text = self.gameController.gameBoard.currentTurnPlayerProfile.userName + GameStateInfoStore.playerTurnTrailing.rawValue
+                if(self.gameController.gameBoard.isAgainstAiOpponent)
+                {
+                    self.gamePhase = .aiTurn
+                    self.gameStatusLabel.text = GameStateInfoStore.aiMoveIndicator.rawValue
+                    self.playerTurnLabel.text = self.gameController.gameBoard.currentTurnPlayerProfile.userName + GameStateInfoStore.playerTurnTrailing.rawValue
+                    DispatchQueue.main.asyncAfter(deadline: .now() + Duration.placeMarbleWait.rawValue)
+                    {
+                        self.handleAITurn()
+                    }
+                }
+                else
+                {
+                    self.gamePhase = .placeMarble
+                    
+                    self.upperLeftSubgrid.allowsSelection = true
+                    self.upperRightSubgrid.allowsSelection = true
+                    self.lowerLeftSubgrid.allowsSelection = true
+                    self.lowerRightSubgrid.allowsSelection = true
+                    
+                    self.gameStatusLabel.text = GameStateInfoStore.placeMarbleInstruction.rawValue
+                    self.playerTurnLabel.text = self.gameController.gameBoard.currentTurnPlayerProfile.userName + GameStateInfoStore.playerTurnTrailing.rawValue
+                }
             }
         }
         self.gamePhase = .animationOccuring
@@ -451,6 +452,7 @@ class GameBoardViewController: UIViewController
         do
         {
             aiMoveInfo = try self.gameController.aiPlaceMarble()
+    
             guard aiMoveInfo.rowIndex != nil, aiMoveInfo.columnIndex != nil else
             {
                 return
@@ -521,54 +523,59 @@ class GameBoardViewController: UIViewController
                     }
                 }
             }
+            onMarblePlace(rowIndex:aiMoveInfo.rowIndex!, columnIndex: aiMoveInfo.columnIndex!)
             
             aiRotateInfo = self.gameController.aiRotateSubgrid()
             aiRotationAnimator = self.createAIRotationAnimator(subgrid: aiRotateInfo.subgrid!, rotationDirection: aiRotateInfo.rotationDirection!)
             aiRotationAnimator!.addCompletion()
             {_ in
-        
-                self.gamePhase = .placeMarble
+                self.onSubgridRotate()
                 
-                self.upperLeftSubgrid.allowsSelection = true
-                self.upperRightSubgrid.allowsSelection = true
-                self.lowerLeftSubgrid.allowsSelection = true
-                self.lowerRightSubgrid.allowsSelection = true
-                
-                self.gameStatusLabel.text = GameStateInfoStore.placeMarbleInstruction.rawValue
-                self.playerTurnLabel.text = self.gameController.gameBoard.currentTurnPlayerProfile.userName + GameStateInfoStore.playerTurnTrailing.rawValue
-                
-                switch aiRotateInfo.subgrid
+                if(self.gamePhase != .gameOver)
                 {
+                    self.gamePhase = .placeMarble
+                    
+                    self.upperLeftSubgrid.allowsSelection = true
+                    self.upperRightSubgrid.allowsSelection = true
+                    self.lowerLeftSubgrid.allowsSelection = true
+                    self.lowerRightSubgrid.allowsSelection = true
+                    
+                    self.gameStatusLabel.text = GameStateInfoStore.placeMarbleInstruction.rawValue
+                    self.playerTurnLabel.text = self.gameController.gameBoard.currentTurnPlayerProfile.userName + GameStateInfoStore.playerTurnTrailing.rawValue
+                    
+                    switch aiRotateInfo.subgrid
+                    {
                     case .upperLeft:
                         for cell in self.upperLeftSubgrid.visibleCells
                         {
                             let castCell = cell as! GameBoardCollectionViewCell
-                        
+                            
                             castCell.updateGameBoardIndices(rotationDirection: aiRotateInfo.rotationDirection!)
                         }
                     case .upperRight:
                         for cell in self.upperRightSubgrid.visibleCells
                         {
                             let castCell = cell as! GameBoardCollectionViewCell
-                        
+                            
                             castCell.updateGameBoardIndices(rotationDirection: aiRotateInfo.rotationDirection!)
                         }
                     case .lowerLeft:
                         for cell in self.lowerLeftSubgrid.visibleCells
-                            {
+                        {
                             let castCell = cell as! GameBoardCollectionViewCell
-                        
+                            
                             castCell.updateGameBoardIndices(rotationDirection: aiRotateInfo.rotationDirection!)
                         }
                     case .lowerRight:
                         for cell in self.lowerRightSubgrid.visibleCells
                         {
                             let castCell = cell as! GameBoardCollectionViewCell
-                        
+                            
                             castCell.updateGameBoardIndices(rotationDirection: aiRotateInfo.rotationDirection!)
                         }
                     default:
                         fatalError("Unnaccounted for case")
+                    }
                 }
             }
             
@@ -585,12 +592,10 @@ class GameBoardViewController: UIViewController
         }
         catch let GameBoardException.CellOccupied(message)
         {
-            //Notify the user
             fatalError(message)
         }
         catch let GameBoardException.GameGridFull(message)
         {
-            //notify the user
             fatalError(message)
         }
         catch
@@ -643,6 +648,13 @@ class GameBoardViewController: UIViewController
                 }
             }
         }
+        else
+        {
+            if(self.gameController.didDrawHappen())
+            {
+                onDraw()
+            }
+        }
     }
     
     func onMarblePlace(rowIndex: Int, columnIndex: Int)
@@ -689,6 +701,13 @@ class GameBoardViewController: UIViewController
                 }
             }
         }
+        else
+        {
+            if(self.gameController.didDrawHappen())
+            {
+                onDraw()
+            }
+        }
     }
     
     func onDraw()
@@ -721,7 +740,7 @@ class GameBoardViewController: UIViewController
         {
             let snackbarMessage = playerProfile.userName + " earned " + achievement.achievementTitle
             let snackbarViewModel = SnackbarViewModel(type: .info, text: snackbarMessage, image: .init(systemName: "trophy.circle.fill"))
-            let snackbar = SnackbarView(viewModel: snackbarViewModel, frame: self.snackbarFrame, popUpFrame: self.snackbarPopUpFrame, duration: Duration.snackbarDuration.rawValue)
+            let snackbar = SnackbarView(viewModel: snackbarViewModel, frame: self.snackbarFrame, verticalTranslation: self.snackbarVerticalTranslation, backgroundColour: .green, duration: Duration.snackbarDuration.rawValue)
             self.snackbarQueue.append(snackbar)
         }
     }
@@ -736,7 +755,7 @@ class GameBoardViewController: UIViewController
             {
                 DispatchQueue.main.asyncAfter(deadline: .now() + currentOffset)
                 {
-                    snackbar.showSnackbar(view: self.view)
+                    snackbar.showSnackbar(view: self.view.window!)
                     self.snackbarQueue.removeAll(where: {$0 === snackbar})
                 }
                 currentOffset += Duration.snackbarDuration.rawValue //The snack bar will show up one after the other
@@ -758,7 +777,7 @@ class GameBoardViewController: UIViewController
         case gridRotationDuration = 1.5 //Seconds
         case placeMarbleWait = 0.75 //Seconds
         case rotateSubgridWait = 1
-        case snackbarDuration = 3.5
+        case snackbarDuration = 2.5
     }
 }
 
@@ -788,11 +807,14 @@ extension GameBoardViewController: UICollectionViewDelegate
             do
             {
                 try self.gameController.placeMarble(rowIndex: cell.gameBoardRowIndex, columnIndex: cell.gameBoardColumnIndex)
-                onMarblePlace(rowIndex: cell.gameBoardRowIndex, columnIndex: cell.gameBoardColumnIndex)
                 cell.cellImageView.image = ImageAssetFactory.getGameBoardCellUIImage(cellType: cell.initialCellType, colour: self.gameController.gameBoard.currentTurnPlayerProfile.marbleColour)
+                onMarblePlace(rowIndex: cell.gameBoardRowIndex, columnIndex: cell.gameBoardColumnIndex)
                 
-                self.gamePhase = .rotateSubgid
-                self.gameStatusLabel.text = GameStateInfoStore.subgridSelectInstruction.rawValue
+                if(self.gamePhase != .gameOver)
+                {
+                    self.gamePhase = .rotateSubgid
+                    self.gameStatusLabel.text = GameStateInfoStore.subgridSelectInstruction.rawValue
+                }
             }
             catch let GeneralException.IllegalArgument(message)
             {
@@ -801,12 +823,22 @@ extension GameBoardViewController: UICollectionViewDelegate
             catch let GameBoardException.CellOccupied(message)
             {
                 //Notify the user
-                fatalError(message)
+                let snackbarMessage = "This Cell already has a Marble in it!"
+                let snackbarViewModel = SnackbarViewModel(type: .info, text: snackbarMessage, image: .init(systemName: "exclamationmark.circle.fill"))
+                let snackbar = SnackbarView(viewModel: snackbarViewModel, frame: self.snackbarFrame, verticalTranslation: self.snackbarVerticalTranslation, backgroundColour: .gray, duration: Duration.snackbarDuration.rawValue)
+                
+                //Wont be added to the queue because t should appear immediately
+                snackbar.showSnackbar(view: self.view.window!)
             }
             catch let GameBoardException.GameGridFull(message)
             {
-                //notify the user
-                fatalError(message)
+                //This shouldnt really ever appear with the way the code is structured
+                let snackbarMessage = "The Gameboard is Full!"
+                let snackbarViewModel = SnackbarViewModel(type: .info, text: snackbarMessage, image: .init(systemName: "exclamationmark.circle.fill"))
+                let snackbar = SnackbarView(viewModel: snackbarViewModel, frame: self.snackbarFrame, verticalTranslation: self.snackbarVerticalTranslation, backgroundColour: .gray, duration: Duration.snackbarDuration.rawValue)
+                
+                //Wont be added to the queue because t should appear immediately
+                snackbar.showSnackbar(view: self.view.window!)
             }
             catch
             {

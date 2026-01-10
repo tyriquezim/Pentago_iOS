@@ -15,10 +15,10 @@ class SnackbarView: UIView
     private let label: UILabel
     private let imageView: UIImageView
     private var handler: (() -> Void)?
-    private let popUpFrame: CGRect
+    private let verticalTranslation: Double
     private let duration: Double
     
-    init(viewModel: SnackbarViewModel, frame: CGRect, popUpFrame: CGRect, duration: Double)
+    init(viewModel: SnackbarViewModel, frame: CGRect, verticalTranslation: Double, backgroundColour: UIColor, duration: Double)
     {
         self.viewModel = viewModel
         
@@ -30,11 +30,11 @@ class SnackbarView: UIView
         self.imageView = UIImageView()
         self.imageView.clipsToBounds = true
         self.imageView.contentMode = .scaleAspectFit
-        self.popUpFrame = popUpFrame
+        self.verticalTranslation = verticalTranslation
         self.duration = duration
         
         super.init(frame: frame)
-        
+        self.translatesAutoresizingMaskIntoConstraints = true
         self.addSubview(self.label)
         
         if(self.viewModel.image != nil)
@@ -42,9 +42,9 @@ class SnackbarView: UIView
             self.addSubview(self.imageView)
         }
         
-        self.backgroundColor = .green
+        self.backgroundColor = backgroundColour
         self.clipsToBounds = true
-        self.layer.cornerRadius = 10
+        self.layer.cornerRadius = 30
         self.layer.masksToBounds = true
         
         self.configure()
@@ -96,17 +96,18 @@ class SnackbarView: UIView
     {
         view.addSubview(self)
         
-        let originalFrame = self.frame
-        var popAnimator: UIViewPropertyAnimator = UIViewPropertyAnimator(duration: 0.5, curve: .easeInOut)
+        //let originalFrame = self.frame
+        let popAnimator: UIViewPropertyAnimator = UIViewPropertyAnimator(duration: 0.5, curve: .easeInOut)
         {
-            self.frame = self.popUpFrame
+            self.transform = CGAffineTransform(translationX: 0, y: -self.verticalTranslation)
+            //self.frame = self.popUpFrame
         }
         
         popAnimator.addCompletion()
         {_ in
-            var dismissAnimator: UIViewPropertyAnimator = UIViewPropertyAnimator(duration: 0.5, curve: .easeInOut)
+            let dismissAnimator: UIViewPropertyAnimator = UIViewPropertyAnimator(duration: 0.5, curve: .easeInOut)
             {
-                self.frame = originalFrame
+                self.transform = CGAffineTransform(translationX: 0, y: self.verticalTranslation)
             }
             dismissAnimator.addCompletion()
             {_ in
