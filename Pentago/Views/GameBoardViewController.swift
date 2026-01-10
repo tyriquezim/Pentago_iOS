@@ -608,7 +608,7 @@ class GameBoardViewController: UIViewController
             self.upperRightSubgrid.isUserInteractionEnabled = false
             self.lowerLeftSubgrid.isUserInteractionEnabled = false
             self.lowerRightSubgrid.isUserInteractionEnabled = false
-            self.rotationStackView.isHidden = false
+            self.rotationStackView.isHidden = true
             self.gamePhase = .gameOver
             
             let achievements = winner!.updateWins()
@@ -664,7 +664,7 @@ class GameBoardViewController: UIViewController
             self.upperRightSubgrid.isUserInteractionEnabled = false
             self.lowerLeftSubgrid.isUserInteractionEnabled = false
             self.lowerRightSubgrid.isUserInteractionEnabled = false
-            self.rotationStackView.isHidden = false
+            self.rotationStackView.isHidden = true
             self.gamePhase = .gameOver
             
             let achievements = winner!.updateWins()
