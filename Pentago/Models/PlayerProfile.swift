@@ -109,17 +109,16 @@ class PlayerProfile
         self.manager = nil
     }
     
-    init(userName: String, profilePicture: ProfilePicture, marbleColour: Marble.MarbleColour, manager: PlayerProfileManager)
+    init(playerID: UUID, userName: String, profilePicture: ProfilePicture, marbleColour: Marble.MarbleColour, isLocalPlayer1: Bool, isLocalPlayer2: Bool, numWins: Int, numLosses: Int, numDraws: Int, totalMovesMade: Int)
     {
-        self.playerID = UUID()
+        self.playerID = playerID
         self.userName = userName
         self.profilePicture = profilePicture
         self.marbleColour = marbleColour
-        self._isLocalPlayer1 = false
-        self._isLocalPlayer2 = false
+        self._isLocalPlayer1 = isLocalPlayer1
+        self._isLocalPlayer2 = isLocalPlayer2
         self.playerStats = PlayerStatistics()
         self.playerStats.owner = self
-        self.manager = manager
     }
     
     //Player Statistics Wrappers
@@ -216,6 +215,15 @@ class PlayerProfile
             self.numLosses = 0
             self.numDraws = 0
             self.totalMovesMade = 0
+            self.achievementObserverArray = Array<AchievementObserver>()
+        }
+        
+        init(numWins: Int, numLosses: Int, numDraws: Int, totalMovesMade: Int, achievements: Array<Achievement>)
+        {
+            self.numWins = numWins
+            self.numLosses = numLosses
+            self.numDraws = numDraws
+            self.totalMovesMade = totalMovesMade
             self.achievementObserverArray = Array<AchievementObserver>()
         }
         

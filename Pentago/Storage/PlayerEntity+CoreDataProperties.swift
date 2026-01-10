@@ -18,14 +18,14 @@ extension PlayerEntity {
 
     @NSManaged public var isLocalPlayer1: Bool
     @NSManaged public var isLocalPlayer2: Bool
-    @NSManaged public var marbleColour: String?
+    @NSManaged public var marbleColour: String
     @NSManaged public var numDraws: Int64
     @NSManaged public var numLosses: Int64
     @NSManaged public var numWins: Int64
-    @NSManaged public var playerID: UUID?
-    @NSManaged public var profilePicture: String?
+    @NSManaged public var playerID: UUID
+    @NSManaged public var profilePicture: String
     @NSManaged public var totalMovesMade: Int64
-    @NSManaged public var userName: String?
+    @NSManaged public var userName: String
     @NSManaged public var owns: NSSet?
 
 }

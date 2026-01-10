@@ -10,7 +10,7 @@ import Foundation
 import CoreData
 
 
-public class AchievementEntity: PlayerEntity
+public class AchievementEntity: NSManagedObject
 {
 
 }

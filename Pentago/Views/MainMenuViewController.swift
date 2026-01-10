@@ -5,6 +5,7 @@
 //  Created by Tyrique Zimbizi on 6/12/2025.
 //
 import UIKit
+import CoreData
 
 class MainMenuViewController: UIViewController
 {
@@ -13,52 +14,84 @@ class MainMenuViewController: UIViewController
     @IBOutlet var gameplayStatisticsButton: UIButton!
     @IBOutlet var achievementsButton: UIButton!
     
-    var profileManager: PlayerProfileManager! //Stores and manages user profiles
-    var achievementObserverStore: AchievementObserverStore!
+    var profileManager: PlayerProfileManager? //Stores and manages user profiles
+    var achievementObserverStore: AchievementObserverStore?
     
     
     override func viewDidLoad()
     {
         super.viewDidLoad()
         // Do any additional setup after loading the view.
-        self.profileManager = PlayerProfileManager()
-        self.achievementObserverStore = AchievementObserverStore()
-        
-        //Initial Player Objects
-        var playerProfile1 = PlayerProfile(userName: "Tyrique", profilePicture: PlayerProfile.ProfilePicture.tiger, marbleColour: Marble.MarbleColour.red)
-        var playerProfile2 = PlayerProfile(userName: "Naruto", profilePicture: PlayerProfile.ProfilePicture.giraffe, marbleColour: Marble.MarbleColour.orange)
-        var playerProfile3 = PlayerProfile(userName: "Sasuke", profilePicture: PlayerProfile.ProfilePicture.lion, marbleColour: Marble.MarbleColour.blue)
-        var playerProfile4 = PlayerProfile(userName: "Sakura", profilePicture: PlayerProfile.ProfilePicture.ostrich, marbleColour: Marble.MarbleColour.pink)
-        var aiProfile = PlayerProfile(userName: "AI", profilePicture: PlayerProfile.ProfilePicture.cpuRobot, marbleColour: Marble.MarbleColour.grey)
-        
-        do
+        if(self.profileManager == nil)
         {
-            try self.profileManager.addPlayerProfile(newProfile: playerProfile1)
-            try self.profileManager.addPlayerProfile(newProfile: playerProfile2)
-            try self.profileManager.addPlayerProfile(newProfile: playerProfile3)
-            try self.profileManager.addPlayerProfile(newProfile: playerProfile4)
-            try self.profileManager.addAIProfile(newProfile: aiProfile)
+            self.profileManager = PlayerProfileManager()
         }
-        catch(GeneralException.IllegalArgument)
+        if(self.achievementObserverStore == nil)
         {
-            //Will replace with a notification
-            fatalError("Could not add profile.")
-        }
-        catch
-        {
-            fatalError("Unexpected error: \(error)")
+            self.achievementObserverStore = AchievementObserverStore()
         }
         
-        playerProfile1.isLocalPlayer1 = true
-        playerProfile2.isLocalPlayer2 = true
+        let notificationCenter = NotificationCenter.default
+        notificationCenter.addObserver(self, selector: #selector(self.saveProfiles), name: UIScene.didEnterBackgroundNotification, object: nil) //Save profiles when app enters the background state
         
-        var allProfiles: Array<PlayerProfile> = Array()
-        allProfiles.append(contentsOf: self.profileManager.getPlayerProfileArray())
-        allProfiles.append(contentsOf: self.profileManager.getAIProfileArray())
-        
-        for profile in allProfiles
+        if(self.profileManager!.getPlayerProfileArray().isEmpty)
         {
-            profile.addAchievementObservers(achievementObservers: achievementObserverStore.createInitialisedObserverList())
+            let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+            let request: NSFetchRequest<PlayerEntity> = PlayerEntity.fetchRequest()
+
+            do
+            {
+                var playerEntities = try context.fetch(request)
+                
+                if(!playerEntities.isEmpty)
+                {
+                    for playerEntity in playerEntities
+                    {
+                        let playerProfile = PlayerProfile(playerID: playerEntity.playerID, userName: playerEntity.userName, profilePicture: PlayerProfile.ProfilePicture(rawValue: playerEntity.profilePicture)!, marbleColour: Marble.MarbleColour(rawValue: playerEntity.marbleColour)!, isLocalPlayer1: playerEntity.isLocalPlayer1, isLocalPlayer2: playerEntity.isLocalPlayer2, numWins: Int(playerEntity.numWins), numLosses: Int(playerEntity.numLosses), numDraws: Int(playerEntity.numDraws), totalMovesMade: Int(playerEntity.totalMovesMade))
+                        
+                        let achievementsRequest: NSFetchRequest<AchievementEntity> = AchievementEntity.fetchRequest()
+                        achievementsRequest.predicate = NSPredicate(format: "belongsTo == %@", playerEntity)
+                        let achievementEntities = try context.fetch(achievementsRequest)
+                        
+                        var achievements: Array<Achievement> = Array()
+                        
+                        for achievementEntity in achievementEntities
+                        {
+                            let achievement = Achievement(achievementTitle: achievementEntity.achievementTitle, achievementDescription: achievementEntity.achievementDescription, hasBeenEarned: achievementEntity.hasBeenEarned, dateEarned: achievementEntity.dateEarned, hasBeenDisplayed: achievementEntity.hasBeenDisplayed)
+                            achievements.append(achievement)
+                        }
+                            
+                        playerProfile.addAchievementObservers(achievementObservers: self.achievementObserverStore!.createInitialisedObserverList(existingAchievements: achievements))
+                        try self.profileManager!.addPlayerProfile(newProfile: playerProfile)
+                    }
+                }
+            }
+            catch let GeneralException.IllegalArgument(message)
+            {
+                fatalError(message)
+            }
+            catch
+            {
+                fatalError("Failed to extract players")
+            }
+        }
+        if(self.profileManager!.getAIProfileArray().isEmpty)
+        {
+            let aiProfile = PlayerProfile(userName: "AI", profilePicture: .cpuRobot, marbleColour: .grey)
+            
+            do
+            {
+                try self.profileManager!.addAIProfile(newProfile: aiProfile)
+                aiProfile.addAchievementObservers(achievementObservers: achievementObserverStore!.createInitialisedObserverList())
+            }
+            catch let GeneralException.IllegalArgument(message)
+            {
+                fatalError(message)
+            }
+            catch
+            {
+                fatalError("Failed to add AI profile")
+            }
         }
     }
     
@@ -104,6 +137,33 @@ class MainMenuViewController: UIViewController
             default:
                 preconditionFailure("Unexpected segue identifier")
         }
+    }
+    
+    @objc func saveProfiles()
+    {
+        let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+        let request: NSFetchRequest<PlayerEntity> = PlayerEntity.fetchRequest()
+        
+        do
+        {
+            var playerEntities = try context.fetch(request)
+            
+            for playerEntity in playerEntities
+            {
+                for playerProfile in self.profileManager!.getPlayerProfileArray()
+                {
+                    if(playerEntity.playerID == playerProfile.playerID)
+                    {
+                        playerEntity.savePlayerProfileData(playerProfile: playerProfile)
+                    }
+                }
+            }
+        }
+        catch
+        {
+            fatalError("Failed to save PlayerProfiles")
+        }
+            
     }
     
     enum ProfileSelectScreenDestination

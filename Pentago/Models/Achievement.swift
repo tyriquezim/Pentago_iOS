@@ -24,6 +24,15 @@ class Achievement: Comparable
         self.hasBeenDisplayed = false
     }
     
+    init(achievementTitle: String, achievementDescription: String, hasBeenEarned: Bool, dateEarned: Date?, hasBeenDisplayed: Bool)
+    {
+        self.achievementTitle = achievementTitle
+        self.achievementDescription = achievementDescription
+        self.hasBeenEarned = hasBeenEarned
+        self.dateEarned = dateEarned
+        self.hasBeenDisplayed = hasBeenDisplayed
+    }
+    
     func earnAchivement()
     {
         dateEarned = Date()

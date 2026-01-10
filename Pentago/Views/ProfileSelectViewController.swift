@@ -13,10 +13,16 @@ class ProfileSelectViewController: UIViewController
     var profileManager: PlayerProfileManager!
     var nextScreen: MainMenuViewController.ProfileSelectScreenDestination!
     let defaultUsername: String = "NewPlayer"
+    var achievementObserverStore: AchievementObserverStore?
     
     override func viewDidLoad()
     {
         super.viewDidLoad()
+        
+        if(self.achievementObserverStore == nil)
+        {
+            self.achievementObserverStore = AchievementObserverStore()
+        }
         
         //Setting the ViewController as the DataSource and delegate of the collectionview
         profileSelectCollectionView.dataSource = self
@@ -49,6 +55,11 @@ extension ProfileSelectViewController: UICollectionViewDelegate
         if(nextScreen == .editProfileScreen && index.item == self.profileManager.getPlayerProfileArray().count)
         {
             let newProfile = PlayerProfile(userName: self.defaultUsername, profilePicture: PlayerProfile.ProfilePicture.defaultIcon, marbleColour: Marble.MarbleColour.random(caseArray: [.black, .blue, .green, .orange, .pink, .purple, .red, .yellow]))
+            newProfile.addAchievementObservers(achievementObservers: self.achievementObserverStore!.createInitialisedObserverList())
+            
+            let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+            let player = PlayerEntity(context: context)
+            player.savePlayerProfileData(playerProfile: newProfile)
             
             var existingUsernames: Array<String> = Array()
             

@@ -24,7 +24,9 @@ class AchievementTableViewController: UITableViewController
     {
         super.viewDidLoad()
         
-        confettiView = ConfettiView()
+        confettiView = ConfettiView(frame: CGRect(x: self.view.frame.width / 2, y: 0, width: 0, height: 0))
+        self.view.addSubview(confettiView)
+    
         confettiView.config.particle = .confetti(allowedShapes: Particle.ConfettiShape.all)
         confettiDuration = 5
     }
@@ -51,7 +53,7 @@ class AchievementTableViewController: UITableViewController
         
         if let earnedDate = designatedAchievement.dateEarned
         {
-            achievementTVCell.achievementDateLabel.isHidden = true
+            achievementTVCell.achievementDateLabel.isHidden = false
             achievementTVCell.achievementDateLabel.text = dateFormatter.string(from: earnedDate)
         }
         else

@@ -103,6 +103,107 @@ struct AchievementObserverStore
         return observerList
     }
     
+    func createInitialisedObserverList(existingAchievements: Array<Achievement>) -> Array<AchievementObserver>
+    {
+        //This is so that new achievements (which are reference types) are created everytime a list of observer for a player profile is created since the observers carry references to them
+        
+        var observerList: Array<AchievementObserver> = [AchievementsEarnedAchievementObserver(), DrawAchievementObserver(), GamesPlayedAchievementObserver(), LoseAchievementObserver(), MovesMadeAchievementObserver(), WinAchievementObserver()]
+
+        //To make sure everything has been ordered correctly
+        guard observerList[0] is AchievementsEarnedAchievementObserver else
+        {
+            fatalError("The first element in the observer list in createInitialisedObserverList is not an instance of AchievementsEarnedAchievementObserver")
+        }
+        guard observerList[1] is DrawAchievementObserver else
+        {
+            fatalError("The second element in the observer list in createInitialisedObserverList is not an instance of DrawAchievementObserver")
+        }
+        guard observerList[2] is GamesPlayedAchievementObserver else
+        {
+            fatalError("The third element in the observer list in createInitialisedObserverList is not an instance of GamesPlayedAchievementObserver")
+        }
+        guard observerList[3] is LoseAchievementObserver else
+        {
+            fatalError("The fourth element in the observer list in createInitialisedObserverList is not an instance of LoseAchievementObserver")
+        }
+        guard observerList[4] is MovesMadeAchievementObserver else
+        {
+            fatalError("The fifth element in the observer list in createInitialisedObserverList is not an instance of MovesMadeAchievementObserver")
+        }
+        guard observerList[5] is WinAchievementObserver else
+        {
+            fatalError("The sixth element in the observer list in createInitialisedObserverList is not an instance of WinAchievementObserver")
+        }
+        
+        for info in self.achievementsEarnedInfo
+        {
+            for achievement in existingAchievements
+            {
+                if(achievement.achievementTitle == info.achievementTitle)
+                {
+                    observerList[0].addAchievement(key: info.key, achievement: achievement)
+                }
+            }
+        }
+        
+        for info in self.drawAchievementsInfo
+        {
+            for achievement in existingAchievements
+            {
+                if(achievement.achievementTitle == info.achievementTitle)
+                {
+                    observerList[1].addAchievement(key: info.key, achievement: achievement)
+                }
+            }
+        }
+        
+        for info in self.gamesPlayedAchievementsInfo
+        {
+            for achievement in existingAchievements
+            {
+                if(achievement.achievementTitle == info.achievementTitle)
+                {
+                    observerList[2].addAchievement(key: info.key, achievement: achievement)
+                }
+            }
+        }
+        
+        for info in self.loseAchievementsInfo
+        {
+            for achievement in existingAchievements
+            {
+                if(achievement.achievementTitle == info.achievementTitle)
+                {
+                    observerList[3].addAchievement(key: info.key, achievement: achievement)
+                }
+            }
+        }
+        
+        for info in self.movesMadeAchievementsInfo
+        {
+            for achievement in existingAchievements
+            {
+                if(achievement.achievementTitle == info.achievementTitle)
+                {
+                    observerList[4].addAchievement(key: info.key, achievement: achievement)
+                }
+            }
+        }
+        
+        for info in self.winAchievementsInfo
+        {
+            for achievement in existingAchievements
+            {
+                if(achievement.achievementTitle == info.achievementTitle)
+                {
+                    observerList[5].addAchievement(key: info.key, achievement: achievement)
+                }
+            }
+        }
+        
+        return observerList
+    }
+    
     //Must always be called last in the init fucntion because one of its keys depends on the length of the others
     private mutating func initialiseAchievementsEarnedInfo()
     {
