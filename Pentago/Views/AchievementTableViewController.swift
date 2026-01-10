@@ -5,10 +5,13 @@
 //  Created by Tyrique Zimbizi on 2/1/2026.
 //
 import UIKit
+import EasyConfetti
 
 class AchievementTableViewController: UITableViewController
 {
     var sourceProfile: PlayerProfile!
+    var confettiView: ConfettiView!
+    var confettiDuration: Double!
     let dateFormatter: DateFormatter =
     {
         let df = DateFormatter()
@@ -16,6 +19,15 @@ class AchievementTableViewController: UITableViewController
         
         return df
     }()
+    
+    override func viewDidLoad()
+    {
+        super.viewDidLoad()
+        
+        confettiView = ConfettiView()
+        confettiView.config.particle = .confetti(allowedShapes: Particle.ConfettiShape.all)
+        confettiDuration = 5
+    }
     
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int
     {
@@ -52,5 +64,19 @@ class AchievementTableViewController: UITableViewController
         achievementTVCell.achievementDescriptionLabel.text = designatedAchievement.achievementDescription
     
         return achievementTVCell
+    }
+    
+    override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath)
+    {
+        let designatedAchievement = sourceProfile.achievements[indexPath.row]
+        
+        if(designatedAchievement.hasBeenEarned)
+        {
+            confettiView.start()
+            DispatchQueue.main.asyncAfter(deadline: .now() + confettiDuration)
+            {
+                self.confettiView.stop()
+            }
+        }
     }
 }

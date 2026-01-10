@@ -113,7 +113,7 @@ class GameBoardViewController: UIViewController
         self.lowerLeftSubgrid.allowsSelection = false
         self.lowerRightSubgrid.allowsSelection = false
         
-        var rotationAnimator: UIViewPropertyAnimator = createRotationAnimator(rotationDirection: .clockwise)
+        let rotationAnimator: UIViewPropertyAnimator = createRotationAnimator(rotationDirection: .clockwise)
         
         rotationAnimator.addCompletion()
         {_ in
@@ -460,11 +460,9 @@ class GameBoardViewController: UIViewController
             
             if(aiMoveInfo.rowIndex! <= 2 && aiMoveInfo.columnIndex! <= 2) //upper left
             {
-                var designatedCell: GameBoardCollectionViewCell? = nil
-                
                 for cell in self.upperLeftSubgrid.visibleCells
                 {
-                    var castedCell = cell as! GameBoardCollectionViewCell
+                    let castedCell = cell as! GameBoardCollectionViewCell
                     
                     if(castedCell.gameBoardRowIndex == aiMoveInfo.rowIndex && castedCell.gameBoardColumnIndex == aiMoveInfo.columnIndex)
                     {
@@ -476,11 +474,9 @@ class GameBoardViewController: UIViewController
             {
                 if(aiMoveInfo.rowIndex! <= 2 && aiMoveInfo.columnIndex! <= 5) //upper right
                 {
-                    var designatedCell: GameBoardCollectionViewCell? = nil
-                    
                     for cell in self.upperRightSubgrid.visibleCells
                     {
-                        var castedCell = cell as! GameBoardCollectionViewCell
+                        let castedCell = cell as! GameBoardCollectionViewCell
                         
                         if(castedCell.gameBoardRowIndex == aiMoveInfo.rowIndex && castedCell.gameBoardColumnIndex == aiMoveInfo.columnIndex)
                         {
@@ -492,11 +488,9 @@ class GameBoardViewController: UIViewController
                 {
                     if(aiMoveInfo.rowIndex! <= 5 && aiMoveInfo.columnIndex! <= 2) //lower left
                     {
-                        var designatedCell: GameBoardCollectionViewCell? = nil
-                        
                         for cell in self.lowerLeftSubgrid.visibleCells
                         {
-                            var castedCell = cell as! GameBoardCollectionViewCell
+                            let castedCell = cell as! GameBoardCollectionViewCell
                             
                             if(castedCell.gameBoardRowIndex == aiMoveInfo.rowIndex && castedCell.gameBoardColumnIndex == aiMoveInfo.columnIndex)
                             {
@@ -508,11 +502,9 @@ class GameBoardViewController: UIViewController
                     {
                         if(aiMoveInfo.rowIndex! <= 5 && aiMoveInfo.columnIndex! <= 5)//Falls to the lower right
                         {
-                            var designatedCell: GameBoardCollectionViewCell? = nil
-                            
                             for cell in self.lowerRightSubgrid.visibleCells
                             {
-                                var castedCell = cell as! GameBoardCollectionViewCell
+                                let castedCell = cell as! GameBoardCollectionViewCell
                                 
                                 if(castedCell.gameBoardRowIndex == aiMoveInfo.rowIndex && castedCell.gameBoardColumnIndex == aiMoveInfo.columnIndex)
                                 {
@@ -630,10 +622,11 @@ class GameBoardViewController: UIViewController
             {
                 let achievements = self.gameController.gameBoard.player2Profile.updateLosses()
                 
-                if(!achievements.isEmpty)
+                if(!achievements.isEmpty && !self.gameController.gameBoard.isAgainstAiOpponent)
                 {
                     onAchievementEarned(playerProfile: self.gameController.gameBoard.player2Profile, achievementsEarned: achievements)
                 }
+                onPlayerMove(playerProfile: self.gameController.gameBoard.player1Profile) //Only counts placing a marble as a move on its own without rotation if it resulted in a win
             }
             else
             {
@@ -645,6 +638,7 @@ class GameBoardViewController: UIViewController
                     {
                         onAchievementEarned(playerProfile: self.gameController.gameBoard.player1Profile, achievementsEarned: achievements)
                     }
+                    onPlayerMove(playerProfile: self.gameController.gameBoard.player2Profile) //Only counts placing a marble as a move on its own without rotation if it resulted in a win
                 }
             }
         }
@@ -655,6 +649,7 @@ class GameBoardViewController: UIViewController
                 onDraw()
             }
         }
+        displaySnackbars()
     }
     
     func onMarblePlace(rowIndex: Int, columnIndex: Int)
@@ -683,21 +678,23 @@ class GameBoardViewController: UIViewController
             {
                 let achievements = self.gameController.gameBoard.player2Profile.updateLosses()
                 
-                if(!achievements.isEmpty)
+                if(!achievements.isEmpty && !self.gameController.gameBoard.isAgainstAiOpponent)
                 {
                     onAchievementEarned(playerProfile: self.gameController.gameBoard.player2Profile, achievementsEarned: achievements)
                 }
+                onPlayerMove(playerProfile: self.gameController.gameBoard.player1Profile) //Only counts placing a marble as a move on its own without rotation if it resulted in a win
             }
             else
             {
                 if(winner === self.gameController.gameBoard.player2Profile)
                 {
-                    let achievements = self.gameController.gameBoard.player1Profile.updateLosses()
-                    
+                    var achievements = self.gameController.gameBoard.player1Profile.updateLosses()
+                
                     if(!achievements.isEmpty)
                     {
                         onAchievementEarned(playerProfile: self.gameController.gameBoard.player1Profile, achievementsEarned: achievements)
                     }
+                    onPlayerMove(playerProfile: self.gameController.gameBoard.player2Profile) //Only counts placing a marble as a move on its own without rotation if it resulted in a win
                 }
             }
         }
@@ -708,6 +705,7 @@ class GameBoardViewController: UIViewController
                 onDraw()
             }
         }
+        displaySnackbars()
     }
     
     func onDraw()
@@ -728,7 +726,7 @@ class GameBoardViewController: UIViewController
         {
             onAchievementEarned(playerProfile: self.gameController.gameBoard.player1Profile, achievementsEarned: player1Achievements)
         }
-        if(!player2Achievements.isEmpty)
+        if(!player2Achievements.isEmpty && !self.gameController.gameBoard.isAgainstAiOpponent)
         {
             onAchievementEarned(playerProfile: self.gameController.gameBoard.player2Profile, achievementsEarned: player2Achievements)
         }
@@ -738,10 +736,28 @@ class GameBoardViewController: UIViewController
     {
         for achievement in achievementsEarned
         {
-            let snackbarMessage = playerProfile.userName + " earned " + achievement.achievementTitle
-            let snackbarViewModel = SnackbarViewModel(type: .info, text: snackbarMessage, image: .init(systemName: "trophy.circle.fill"))
-            let snackbar = SnackbarView(viewModel: snackbarViewModel, frame: self.snackbarFrame, verticalTranslation: self.snackbarVerticalTranslation, backgroundColour: .green, duration: Duration.snackbarDuration.rawValue)
-            self.snackbarQueue.append(snackbar)
+            if(!achievement.hasBeenDisplayed)
+            {
+                let snackbarMessage = playerProfile.userName + " earned " + achievement.achievementTitle
+                let snackbarViewModel = SnackbarViewModel(type: .info, text: snackbarMessage, image: .init(systemName: "trophy.circle.fill"))
+                let snackbar = SnackbarView(viewModel: snackbarViewModel, frame: self.snackbarFrame, verticalTranslation: self.snackbarVerticalTranslation, backgroundColour: .green, imageColour: .yellow, duration: Duration.snackbarDuration.rawValue)
+                self.snackbarQueue.append(snackbar)
+                
+                achievement.hasBeenDisplayed = true
+            }
+        }
+    }
+    
+    func onPlayerMove(playerProfile: PlayerProfile)
+    {
+        let achievements = playerProfile.updateTotalMovesMade()
+        
+        if(!achievements.isEmpty)
+        {
+            if(!(self.gameController.gameBoard.isAgainstAiOpponent && playerProfile === self.gameController.gameBoard.player2Profile)) //checks to see if this is the as the AI cant earn achievements
+            {
+                onAchievementEarned(playerProfile: self.gameController.gameBoard.currentTurnPlayerProfile, achievementsEarned: achievements)
+            }
         }
     }
     
@@ -750,7 +766,7 @@ class GameBoardViewController: UIViewController
         if(!self.snackbarQueue.isEmpty)
         {
             var currentOffset: Double = 0
-            var copyQueue = self.snackbarQueue!
+            let copyQueue = self.snackbarQueue!
             for snackbar in copyQueue
             {
                 DispatchQueue.main.asyncAfter(deadline: .now() + currentOffset)
@@ -820,22 +836,22 @@ extension GameBoardViewController: UICollectionViewDelegate
             {
                 fatalError(message)
             }
-            catch let GameBoardException.CellOccupied(message)
+            catch(GameBoardException.CellOccupied)
             {
                 //Notify the user
                 let snackbarMessage = "This Cell already has a Marble in it!"
                 let snackbarViewModel = SnackbarViewModel(type: .info, text: snackbarMessage, image: .init(systemName: "exclamationmark.circle.fill"))
-                let snackbar = SnackbarView(viewModel: snackbarViewModel, frame: self.snackbarFrame, verticalTranslation: self.snackbarVerticalTranslation, backgroundColour: .gray, duration: Duration.snackbarDuration.rawValue)
+                let snackbar = SnackbarView(viewModel: snackbarViewModel, frame: self.snackbarFrame, verticalTranslation: self.snackbarVerticalTranslation, backgroundColour: .systemGray2, imageColour: .systemPurple, duration: Duration.snackbarDuration.rawValue)
                 
                 //Wont be added to the queue because t should appear immediately
                 snackbar.showSnackbar(view: self.view.window!)
             }
-            catch let GameBoardException.GameGridFull(message)
+            catch(GameBoardException.GameGridFull)
             {
                 //This shouldnt really ever appear with the way the code is structured
                 let snackbarMessage = "The Gameboard is Full!"
                 let snackbarViewModel = SnackbarViewModel(type: .info, text: snackbarMessage, image: .init(systemName: "exclamationmark.circle.fill"))
-                let snackbar = SnackbarView(viewModel: snackbarViewModel, frame: self.snackbarFrame, verticalTranslation: self.snackbarVerticalTranslation, backgroundColour: .gray, duration: Duration.snackbarDuration.rawValue)
+                let snackbar = SnackbarView(viewModel: snackbarViewModel, frame: self.snackbarFrame, verticalTranslation: self.snackbarVerticalTranslation, backgroundColour: .systemGray2, imageColour: .systemPurple, duration: Duration.snackbarDuration.rawValue)
                 
                 //Wont be added to the queue because t should appear immediately
                 snackbar.showSnackbar(view: self.view.window!)

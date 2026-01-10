@@ -18,18 +18,20 @@ class SnackbarView: UIView
     private let verticalTranslation: Double
     private let duration: Double
     
-    init(viewModel: SnackbarViewModel, frame: CGRect, verticalTranslation: Double, backgroundColour: UIColor, duration: Double)
+    init(viewModel: SnackbarViewModel, frame: CGRect, verticalTranslation: Double, backgroundColour: UIColor, imageColour: UIColor, duration: Double)
     {
         self.viewModel = viewModel
         
         self.label = UILabel()
-        self.label.textColor = .label
+        self.label.textColor = .white
         self.label.numberOfLines = 0
         self.label.textAlignment = .center
+        self.label.font = UIFont(name: "Futura Bold", size: 12)
         
         self.imageView = UIImageView()
         self.imageView.clipsToBounds = true
         self.imageView.contentMode = .scaleAspectFit
+        self.imageView.tintColor = imageColour
         self.verticalTranslation = verticalTranslation
         self.duration = duration
         

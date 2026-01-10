@@ -1,0 +1,15 @@
+{
+  "originHash" : "f29e17b052c3d2e049c05aca49eb433fc1d6c611375a5e10308c9d2784736aa0",
+  "pins" : [
+    {
+      "identity" : "easyconfetti",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/onmyway133/EasyConfetti",
+      "state" : {
+        "revision" : "fffe1b1969b91c6cde8f93744957cc6c23087275",
+        "version" : "2.4.0"
+      }
+    }
+  ],
+  "version" : 3
+}

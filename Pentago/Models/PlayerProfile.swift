@@ -154,15 +154,19 @@ class PlayerProfile
         self.playerStats.removeAchievementObserver(index: index)
     }
     
-    private struct PlayerStatistics
+    private class PlayerStatistics
     {
         weak var owner: PlayerProfile? //Weak so that it can get garbage collected if other references to it disappear
-        var numGamesPlayed: Int
+        
         var numWins: Int
         var numLosses: Int
         var numDraws: Int
         var totalMovesMade: Int
         var numAchievements: Int {return self.achievements.count}
+        var numGamesPlayed: Int
+        {
+            return numWins + numLosses + numDraws
+        }
         var numAchievementsEarned: Int
         {
             let achievements = self.achievements
@@ -208,7 +212,6 @@ class PlayerProfile
         
         init()
         {
-            self.numGamesPlayed = 0
             self.numWins = 0
             self.numLosses = 0
             self.numDraws = 0
@@ -216,9 +219,8 @@ class PlayerProfile
             self.achievementObserverArray = Array<AchievementObserver>()
         }
         
-        mutating func updateWins() -> Array<Achievement>
+        func updateWins() -> Array<Achievement>
         {
-            self.numGamesPlayed += 1
             self.numWins += 1
             
             let earnedAchievementArray = notifyAchievementObservers()
@@ -226,46 +228,45 @@ class PlayerProfile
             return earnedAchievementArray
         }
         
-        mutating func updateLosses() -> Array<Achievement>
+        func updateLosses() -> Array<Achievement>
         {
-            self.numGamesPlayed += 1
             self.numLosses += 1
             
-            var earnedAchievementArray = notifyAchievementObservers()
+            let earnedAchievementArray = notifyAchievementObservers()
             
             return earnedAchievementArray
         }
         
-        mutating func updateDraws() -> Array<Achievement>
+        func updateDraws() -> Array<Achievement>
         {
-            self.numGamesPlayed += 1
             self.numDraws += 1
             
-            var earnedAchievementArray = notifyAchievementObservers()
+            let earnedAchievementArray = notifyAchievementObservers()
             
             return earnedAchievementArray
         }
         
-        mutating func updateTotalMovesMade() -> Array<Achievement>
+        func updateTotalMovesMade() -> Array<Achievement>
         {
-            self.totalMovesMade += 1
+            let currentMovesMade = self.totalMovesMade
+            self.totalMovesMade = currentMovesMade + 1
             
             var earnedAchievementArray = notifyAchievementObservers()
             
             return earnedAchievementArray
         }
         
-        mutating func addAchievementObservers(achievementObservers: Array<AchievementObserver>)
+        func addAchievementObservers(achievementObservers: Array<AchievementObserver>)
         {
             self.achievementObserverArray.append(contentsOf: achievementObservers)
         }
         
-        mutating func addAchievementObserver(achievementObserver: AchievementObserver)
+        func addAchievementObserver(achievementObserver: AchievementObserver)
         {
             self.achievementObserverArray.append(achievementObserver)
         }
         
-        mutating func removeAchievementObserver(index: Int)
+        func removeAchievementObserver(index: Int)
         {
             self.achievementObserverArray.remove(at: index)
         }

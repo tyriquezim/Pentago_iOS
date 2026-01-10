@@ -16,11 +16,11 @@ struct GameRulesInfoStore
         
         self.gameRulesArray = Array()
         
-        var rule1 = (RuleTitle.orderOfActions, "A player's turn consists of placing a marble on the game board and then rotating a subgrid (exception being in the case described by rule 3).")
-        var rule2 = (RuleTitle.howToWin, "The game is won when a player manages to align five of their own marbles vertically, horizontally or diagonally.")
-        var rule3 = (RuleTitle.exceptionToRotating, "If a player places a marble and it results in an alignment of five for themselves, they are not required to rotate a grid and thus become the winner of the match.")
-        var rule4 = (RuleTitle.fullBoardDraw, "A game results in a draw if the entire board gets filled without any of the players managing to align five of their marbles in a row.")
-        var rule5 = (RuleTitle.doubleWinDraw, "A game also results in a draw if, after a rotation, both players obtain an alignment of five of their own marbles simultaneously.")
+        let rule1 = (RuleTitle.orderOfActions, "A player's turn consists of placing a marble on the game board and then rotating a subgrid (exception being in the case described by rule 3).")
+        let rule2 = (RuleTitle.howToWin, "The game is won when a player manages to align five of their own marbles vertically, horizontally or diagonally.")
+        let rule3 = (RuleTitle.exceptionToRotating, "If a player places a marble and it results in an alignment of five for themselves, they are not required to rotate a grid and thus become the winner of the match.")
+        let rule4 = (RuleTitle.fullBoardDraw, "A game results in a draw if the entire board gets filled without any of the players managing to align five of their marbles in a row.")
+        let rule5 = (RuleTitle.doubleWinDraw, "A game also results in a draw if, after a rotation, both players obtain an alignment of five of their own marbles simultaneously.")
         
         self.gameRulesArray.append(rule1)
         self.gameRulesArray.append(rule2)

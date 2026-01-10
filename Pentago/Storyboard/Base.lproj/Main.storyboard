@@ -161,7 +161,6 @@
                             </stackView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                         <constraints>
                             <constraint firstAttribute="trailingMargin" secondItem="9es-9u-Glk" secondAttribute="trailing" constant="20" id="2ig-w3-mYr"/>
                             <constraint firstItem="9es-9u-Glk" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="200" id="6hp-2B-15R"/>
