@@ -596,6 +596,7 @@ class GameBoardViewController: UIViewController
         }
     }
     
+    //Call after the rotation animation completes
     func onSubgridRotate()
     {
         let winner: PlayerProfile? = self.gameController.checkWinConditionPostRotation()
@@ -648,7 +649,14 @@ class GameBoardViewController: UIViewController
                 onDraw()
             }
         }
-        onPlayerMove(playerProfile: self.gameController.gameBoard.player1Profile)
+        if(self.gameController.gameBoard.currentTurnPlayerProfile === self.gameController.gameBoard.player1Profile)
+        {
+            onPlayerMove(playerProfile: self.gameController.gameBoard.player2Profile) //We pass player 2 instead of 1 because after the rotation has been done, the current player isnt the one who just completed the move (it changes automitcally have the rotateFunction has been called).
+        }
+        else
+        {
+            onPlayerMove(playerProfile: self.gameController.gameBoard.player1Profile)
+        }
         displaySnackbars()
     }
     
@@ -688,7 +696,7 @@ class GameBoardViewController: UIViewController
             {
                 if(winner === self.gameController.gameBoard.player2Profile)
                 {
-                    var achievements = self.gameController.gameBoard.player1Profile.updateLosses()
+                    let achievements = self.gameController.gameBoard.player1Profile.updateLosses()
                 
                     if(!achievements.isEmpty)
                     {
@@ -740,7 +748,7 @@ class GameBoardViewController: UIViewController
             {
                 let snackbarMessage = playerProfile.userName + " earned " + achievement.achievementTitle
                 let snackbarViewModel = SnackbarViewModel(type: .info, text: snackbarMessage, image: .init(systemName: "trophy.circle.fill"))
-                let snackbar = SnackbarView(viewModel: snackbarViewModel, frame: self.snackbarFrame, verticalTranslation: self.snackbarVerticalTranslation, backgroundColour: .green, imageColour: .yellow, duration: Duration.snackbarDuration.rawValue)
+                let snackbar = SnackbarView(viewModel: snackbarViewModel, frame: self.snackbarFrame, verticalTranslation: self.snackbarVerticalTranslation, backgroundColour: .systemGreen, imageColour: .yellow, duration: Duration.snackbarDuration.rawValue)
                 self.snackbarQueue.append(snackbar)
                 
                 achievement.hasBeenDisplayed = true
@@ -756,7 +764,7 @@ class GameBoardViewController: UIViewController
         {
             if(!(self.gameController.gameBoard.isAgainstAiOpponent && playerProfile === self.gameController.gameBoard.player2Profile)) //checks to see if this is the as the AI cant earn achievements
             {
-                onAchievementEarned(playerProfile: self.gameController.gameBoard.currentTurnPlayerProfile, achievementsEarned: achievements)
+                onAchievementEarned(playerProfile: playerProfile, achievementsEarned: achievements)
             }
         }
     }
