@@ -117,7 +117,7 @@ class PlayerProfile
         self.marbleColour = marbleColour
         self._isLocalPlayer1 = isLocalPlayer1
         self._isLocalPlayer2 = isLocalPlayer2
-        self.playerStats = PlayerStatistics()
+        self.playerStats = PlayerStatistics(numWins: numWins, numLosses: numLosses, numDraws: numDraws, totalMovesMade: totalMovesMade)
         self.playerStats.owner = self
     }
     
@@ -218,7 +218,7 @@ class PlayerProfile
             self.achievementObserverArray = Array<AchievementObserver>()
         }
         
-        init(numWins: Int, numLosses: Int, numDraws: Int, totalMovesMade: Int, achievements: Array<Achievement>)
+        init(numWins: Int, numLosses: Int, numDraws: Int, totalMovesMade: Int)
         {
             self.numWins = numWins
             self.numLosses = numLosses
