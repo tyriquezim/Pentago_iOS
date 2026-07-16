@@ -20,6 +20,7 @@ class EditProfileViewController: UIViewController
     var activeTextField: UITextField? //Stores the textField instance currently being used by the user
     
     var sourceProfile: PlayerProfile!
+    var isNewProfile: Bool!
     var existingUsernames: Array<String>!
     var defaultUsername: String!
     
@@ -95,7 +96,13 @@ class EditProfileViewController: UIViewController
             }
             else
             {
-               self.navigationController!.popViewController(animated: true)
+                if(self.isNewProfile) //Saves the profile to core data
+                {
+                    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+                    let player = PlayerEntity(context: context)
+                    player.savePlayerProfileData(playerProfile: sourceProfile)
+                }
+                self.navigationController!.popViewController(animated: true)
             }
         }
     }

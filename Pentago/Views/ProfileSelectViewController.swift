@@ -57,9 +57,10 @@ extension ProfileSelectViewController: UICollectionViewDelegate
             let newProfile = PlayerProfile(userName: self.defaultUsername, profilePicture: PlayerProfile.ProfilePicture.defaultIcon, marbleColour: Marble.MarbleColour.random(caseArray: [.black, .blue, .green, .orange, .pink, .purple, .red, .yellow]))
             newProfile.addAchievementObservers(achievementObservers: self.achievementObserverStore!.createInitialisedObserverList())
             
-            let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-            let player = PlayerEntity(context: context)
-            player.savePlayerProfileData(playerProfile: newProfile)
+            //error!!!!!! saving before config. Fix this by passing a flag that lets it know if the source is a new player
+            //let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+            //let player = PlayerEntity(context: context)
+            //player.savePlayerProfileData(playerProfile: newProfile)
             
             var existingUsernames: Array<String> = Array()
             
@@ -74,6 +75,7 @@ extension ProfileSelectViewController: UICollectionViewDelegate
                 
                 let editProfileVC = storyboard!.instantiateViewController(withIdentifier: "StoryBoardEditProfileViewController") as! EditProfileViewController
                 editProfileVC.sourceProfile = newProfile
+                editProfileVC.isNewProfile = true
                 editProfileVC.existingUsernames = existingUsernames
                 editProfileVC.defaultUsername = self.defaultUsername
                 
@@ -108,6 +110,7 @@ extension ProfileSelectViewController: UICollectionViewDelegate
                 let editProfileVC = storyboard!.instantiateViewController(withIdentifier: "StoryBoardEditProfileViewController") as! EditProfileViewController
                 print(existingUsernames)
                 editProfileVC.sourceProfile = designatedProfile
+                editProfileVC.isNewProfile = false
                 editProfileVC.existingUsernames = existingUsernames
                 editProfileVC.defaultUsername = self.defaultUsername
             

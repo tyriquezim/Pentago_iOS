@@ -733,7 +733,6 @@
                             </stackView>
                             <collectionView autoresizesSubviews="NO" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" insetsLayoutMarginsFromSafeArea="NO" scrollEnabled="NO" contentInsetAdjustmentBehavior="never" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="tVz-j4-dg1">
                                 <rect key="frame" x="36" y="384" width="150" height="150"/>
-                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="150" id="AeU-5I-ckD"/>
                                     <constraint firstAttribute="width" constant="150" id="XrL-Gy-C9g"/>
@@ -880,7 +879,6 @@
                             </collectionView>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="kfg-dm-fkr">
                                 <rect key="frame" x="207" y="384" width="150" height="150"/>
-                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="150" id="1bv-ce-Jac"/>
                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="150" id="T2x-Cl-98P"/>
@@ -1027,7 +1025,6 @@
                             </collectionView>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="oxD-dG-F3P">
                                 <rect key="frame" x="36" y="566" width="150" height="150"/>
-                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="150" id="7Sx-Er-s0r"/>
                                     <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="150" id="88C-Ft-OTj"/>
@@ -1174,7 +1171,6 @@
                             </collectionView>
                             <collectionView clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" scrollEnabled="NO" contentInsetAdjustmentBehavior="never" dataMode="prototypes" translatesAutoresizingMaskIntoConstraints="NO" id="epw-OQ-BH9">
                                 <rect key="frame" x="207" y="566" width="150" height="150"/>
-                                <color key="backgroundColor" systemColor="systemBackgroundColor"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="150" id="HlD-6v-IYh"/>
                                     <constraint firstAttribute="width" relation="greaterThanOrEqual" constant="150" id="h1s-SE-8ml"/>
