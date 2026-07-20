@@ -211,7 +211,7 @@ class PlayerProfileManager
     }
     
     //This function ensures that the PlayerProfileManager's array is always up to date with PlayerProfiles that have it as a manager.
-    private func updateProfileArrays()
+    func updateProfileArrays()
     {
         var allProfiles: Array<PlayerProfile> = Array()
         allProfiles.append(contentsOf: self.playerProfilesArray)

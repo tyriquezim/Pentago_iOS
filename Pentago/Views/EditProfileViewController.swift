@@ -49,10 +49,14 @@ class EditProfileViewController: UIViewController
     
     @IBAction func onDeleteButtonTap(deleteButton: UIButton)
     {
+        
         let alert = UIAlertController(title: "Delete Profile", message: "Are you sure you want to delete this profile? This action cannot be undone.", preferredStyle: .alert)
         let deleteConfirmAction = UIAlertAction(title: "Yes", style: .destructive)
         {_ in
-            self.sourceProfile.manager = nil //This manager will remove it automatically
+            let manager = self.sourceProfile.manager
+            self.sourceProfile.manager = nil
+            manager!.updateProfileArrays()
+            
             let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
             let request: NSFetchRequest<PlayerEntity> = PlayerEntity.fetchRequest()
             request.predicate = NSPredicate(format: "playerID == %@", self.sourceProfile.playerID as CVarArg)
@@ -68,7 +72,7 @@ class EditProfileViewController: UIViewController
             }
             
             self.navigationController!.popViewController(animated: true)
-            self.sourceProfile.manager = nil
+            self.sourceProfile.manager
         }
         let deleteDenyAction = UIAlertAction(title: "No", style: .default)
         
