@@ -108,6 +108,51 @@ class MainMenuViewController: UIViewController
         achievementsButton.configuration?.attributedTitle?[AttributeScopes.UIKitAttributes.FontAttribute.self] = interfaceBuilderFont
     }
     
+    override func shouldPerformSegue(withIdentifier identifier: String, sender: Any?) -> Bool
+    {
+        super.shouldPerformSegue(withIdentifier: identifier, sender: sender)
+        
+        var shouldPerformSeg = true
+        switch identifier
+        {
+            case "opponentSelectSegue":
+                shouldPerformSeg = true
+                
+            case "profileSettingsSelectSegue":
+                shouldPerformSeg = true
+            
+            case "gameStatsSelectSegue":
+                if(self.profileManager?.getPlayerProfileArray().count == 0)
+                {
+                    shouldPerformSeg = false
+                    let alert = UIAlertController(title: "Set Up Profiles", message: "There are no profiles to view game statistics. Head to Profile Settings to set up a profile.", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(alert, animated: true, completion: nil)
+                }
+                else
+                {
+                    shouldPerformSeg = true
+                }
+        
+            case "achievementsSelectSegue":
+                if(self.profileManager?.getPlayerProfileArray().count == 0)
+                {
+                    shouldPerformSeg = false
+                    let alert = UIAlertController(title: "Set Up Profiles", message: "There are no profiles to view achievements. Head to Profile Settings to set up a profile.", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default))
+                    self.present(alert, animated: true, completion: nil)
+                }
+                else
+                {
+                    shouldPerformSeg = true
+                }
+            
+            default:
+                preconditionFailure("Unexpected segue identifier")
+        }
+        return shouldPerformSeg
+    }
+    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?)
     {
         super.prepare(for: segue, sender: sender)
