@@ -45,6 +45,11 @@ class EditProfileViewController: UIViewController
         {_ in
             self.onBackButtonTap()
         }
+        
+        if(self.isNewProfile)
+        {
+            self.deleteProfileButton.isHidden = true
+        }
     }
     
     @IBAction func onDeleteButtonTap(deleteButton: UIButton)
@@ -63,8 +68,9 @@ class EditProfileViewController: UIViewController
             
             do
             {
-                var player = try context.fetch(request)
+                let player = try context.fetch(request)
                 context.delete(player[0])//Confident there is only one item in the list
+                try context.save()
             }
             catch
             {
@@ -72,7 +78,6 @@ class EditProfileViewController: UIViewController
             }
             
             self.navigationController!.popViewController(animated: true)
-            self.sourceProfile.manager
         }
         let deleteDenyAction = UIAlertAction(title: "No", style: .default)
         

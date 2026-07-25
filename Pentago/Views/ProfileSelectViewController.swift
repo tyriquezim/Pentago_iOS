@@ -57,11 +57,6 @@ extension ProfileSelectViewController: UICollectionViewDelegate
             let newProfile = PlayerProfile(userName: self.defaultUsername, profilePicture: PlayerProfile.ProfilePicture.defaultIcon, marbleColour: Marble.MarbleColour.random(caseArray: [.black, .blue, .green, .orange, .pink, .purple, .red, .yellow]))
             newProfile.addAchievementObservers(achievementObservers: self.achievementObserverStore!.createInitialisedObserverList())
             
-            //error!!!!!! saving before config. Fix this by passing a flag that lets it know if the source is a new player
-            //let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
-            //let player = PlayerEntity(context: context)
-            //player.savePlayerProfileData(playerProfile: newProfile)
-            
             var existingUsernames: Array<String> = Array()
             
             for profile in self.profileManager.getPlayerProfileArray()
