@@ -9,6 +9,6 @@ import UIKit
 
 class TextFieldTableViewCell: UITableViewCell
 {
-    @IBOutlet var fieldTitleLabel: UILabel!
-    @IBOutlet var textField: UITextField!
+    var fieldTitleLabel: UILabel!
+    var textField: UITextField!
 }

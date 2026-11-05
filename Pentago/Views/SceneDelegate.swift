@@ -3,6 +3,7 @@
 //  Pentago
 //
 //  Created by Tyrique Zimbizi on 6/12/2025.
+//  Updated to fully programmatic UI on 11/5/2026
 //
 
 import UIKit
@@ -13,10 +14,39 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
 
     func scene(_ scene: UIScene, willConnectTo session: UISceneSession, options connectionOptions: UIScene.ConnectionOptions) {
-        // Use this method to optionally configure and attach the UIWindow `window` to the provided UIWindowScene `scene`.
-        // If using a storyboard, the `window` property will automatically be initialized and attached to the scene.
-        // This delegate does not imply the connecting scene or session are new (see `application:configurationForConnectingSceneSession` instead).
-        guard let _ = (scene as? UIWindowScene) else { return }
+        guard let windowScene = (scene as? UIWindowScene) else { return }
+        
+        // Create window
+        let window = UIWindow(windowScene: windowScene)
+        
+        // Create Tab Bar Controller
+        let tabBarController = UITabBarController()
+        
+        // Create Main Menu (Tab 1) - Fully Programmatic
+        let mainMenuVC = MainMenuViewController()
+        let mainMenuNav = UINavigationController(rootViewController: mainMenuVC)
+        mainMenuNav.tabBarItem = UITabBarItem(
+            title: "Play",
+            image: UIImage(systemName: "gamecontroller"),
+            selectedImage: UIImage(systemName: "gamecontroller.fill")
+        )
+        
+        // Create How To Play (Tab 2) - Fully Programmatic
+        let howToPlayVC = HowToPlayTableViewController()
+        let howToPlayNav = UINavigationController(rootViewController: howToPlayVC)
+        howToPlayNav.tabBarItem = UITabBarItem(
+            title: "How To Play",
+            image: UIImage(systemName: "questionmark.circle"),
+            selectedImage: UIImage(systemName: "questionmark.circle.fill")
+        )
+        
+        // Add view controllers to tab bar
+        tabBarController.viewControllers = [mainMenuNav, howToPlayNav]
+        
+        // Set root view controller
+        window.rootViewController = tabBarController
+        self.window = window
+        window.makeKeyAndVisible()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {

@@ -95,17 +95,7 @@ class OpponentSelectViewController: UIViewController
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(subtitleLabel)
         
-        // Player vs AI Card
-        playerVsAICard.configure(
-            mode: .playerVsAI,
-            title: "Player vs AI",
-            subtitle: "Challenge the computer",
-            gradientColors: [UIColor.systemPurple, UIColor.systemIndigo]
-        )
-        playerVsAICard.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(playerVsAICard)
-        
-        // Player vs Player Card
+        // Player vs Player Card (First)
         playerVsPlayerCard.configure(
             mode: .playerVsPlayer,
             title: "Player vs Player",
@@ -114,6 +104,16 @@ class OpponentSelectViewController: UIViewController
         )
         playerVsPlayerCard.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(playerVsPlayerCard)
+        
+        // Player vs AI Card (Second)
+        playerVsAICard.configure(
+            mode: .playerVsAI,
+            title: "Player vs AI",
+            subtitle: "Challenge the computer",
+            gradientColors: [UIColor.systemPurple, UIColor.systemIndigo]
+        )
+        playerVsAICard.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(playerVsAICard)
     }
     
     private func setupConstraints() {
@@ -141,18 +141,18 @@ class OpponentSelectViewController: UIViewController
             subtitleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
             subtitleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             
-            // Player vs AI Card
-            playerVsAICard.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 40),
-            playerVsAICard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 30),
-            playerVsAICard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -30),
-            playerVsAICard.heightAnchor.constraint(equalToConstant: 200),
-            
-            // Player vs Player Card
-            playerVsPlayerCard.topAnchor.constraint(equalTo: playerVsAICard.bottomAnchor, constant: 20),
+            // Player vs Player Card (First)
+            playerVsPlayerCard.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 40),
             playerVsPlayerCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 30),
             playerVsPlayerCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -30),
             playerVsPlayerCard.heightAnchor.constraint(equalToConstant: 200),
-            playerVsPlayerCard.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30)
+            
+            // Player vs AI Card (Second)
+            playerVsAICard.topAnchor.constraint(equalTo: playerVsPlayerCard.bottomAnchor, constant: 20),
+            playerVsAICard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 30),
+            playerVsAICard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -30),
+            playerVsAICard.heightAnchor.constraint(equalToConstant: 200),
+            playerVsAICard.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30)
         ])
     }
     
@@ -172,35 +172,73 @@ class OpponentSelectViewController: UIViewController
     // MARK: - Actions
     
     @objc private func playerVsAITapped() {
-        // Animate selection
-        UIView.animate(withDuration: 0.1, animations: {
-            self.playerVsAICard.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
-        }) { _ in
-            UIView.animate(withDuration: 0.2, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.5, options: [], animations: {
-                self.playerVsAICard.transform = .identity
-            })
+        bounceCard(playerVsAICard)
+
+        guard let profileManager = profileManager else { return }
+
+        guard let player1 = profileManager.activePlayer1 else {
+            showAlert(
+                title: "No Active Player",
+                message: "No profile is set as Player 1. Go to Profile Settings and mark a profile as Player 1 to play against the AI.")
+            return
         }
-        
-        // TODO: Navigate to profile selection for Player vs AI
-        print("Player vs AI selected")
-        showAlert(title: "Player vs AI", message: "This will navigate to profile selection, then start a game against the AI.")
+
+        let aiPlayer2 = profileManager.getAIProfile(index: 0)
+
+        let sheet = UIAlertController(title: "Choose Difficulty", message: "How challenging should the AI be?", preferredStyle: .actionSheet)
+        sheet.addAction(UIAlertAction(title: "Easy", style: .default) { _ in
+            self.startGame(player1: player1, player2: aiPlayer2, isAgainstAI: true, difficulty: .easy)
+        })
+        sheet.addAction(UIAlertAction(title: "Medium", style: .default) { _ in
+            self.startGame(player1: player1, player2: aiPlayer2, isAgainstAI: true, difficulty: .medium)
+        })
+        sheet.addAction(UIAlertAction(title: "Hard", style: .default) { _ in
+            self.startGame(player1: player1, player2: aiPlayer2, isAgainstAI: true, difficulty: .hard)
+        })
+        sheet.addAction(UIAlertAction(title: "Cancel", style: .cancel))
+        present(sheet, animated: true)
     }
-    
+
     @objc private func playerVsPlayerTapped() {
-        // Animate selection
+        bounceCard(playerVsPlayerCard)
+
+        guard let profileManager = profileManager else { return }
+
+        guard let player1 = profileManager.activePlayer1 else {
+            showAlert(
+                title: "No Active Players Set",
+                message: "No profiles are set as Player 1 or Player 2. Go to Profile Settings and assign both before starting a match.")
+            return
+        }
+
+        guard let player2 = profileManager.activePlayer2 else {
+            showAlert(
+                title: "Player 2 Not Set",
+                message: "No profile is set as Player 2. Go to Profile Settings and mark a profile as Player 2 before starting a match.")
+            return
+        }
+
+        startGame(player1: player1, player2: player2, isAgainstAI: false)
+    }
+
+    private func startGame(player1: PlayerProfile, player2: PlayerProfile, isAgainstAI: Bool, difficulty: GameBoard.AIDifficulty = .medium) {
+        let board = GameBoard(player1Profile: player1, player2Profile: player2, isAgainstAiOpponent: isAgainstAI, aiDifficulty: difficulty)
+        let controller = GameBoardController(gameBoard: board)
+        let gameBoardVC = GameBoardViewController()
+        gameBoardVC.gameController = controller
+        navigationController?.pushViewController(gameBoardVC, animated: true)
+    }
+
+    private func bounceCard(_ card: UIView) {
         UIView.animate(withDuration: 0.1, animations: {
-            self.playerVsPlayerCard.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
+            card.transform = CGAffineTransform(scaleX: 0.95, y: 0.95)
         }) { _ in
             UIView.animate(withDuration: 0.2, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 0.5, options: [], animations: {
-                self.playerVsPlayerCard.transform = .identity
+                card.transform = .identity
             })
         }
-        
-        // TODO: Navigate to profile selection for Player vs Player
-        print("Player vs Player selected")
-        showAlert(title: "Player vs Player", message: "This will navigate to profile selection for two players.")
     }
-    
+
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "OK", style: .default))
@@ -239,35 +277,34 @@ class OpponentSelectionCard: UIView {
     
     override func layoutSubviews() {
         super.layoutSubviews()
-        gradientLayer.frame = bounds
+        gradientLayer.frame = containerView.bounds
+        
+        // Set shadow path for better performance and proper shape
+        layer.shadowPath = UIBezierPath(roundedRect: bounds, cornerRadius: 32).cgPath
     }
     
     private func setupView() {
         // Make tappable
         isUserInteractionEnabled = true
         
-        // Container with gradient
-        layer.cornerRadius = 24
-        layer.masksToBounds = true
-        
-        // Gradient background
-        layer.insertSublayer(gradientLayer, at: 0)
-        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-        
-        // Shadow
+        // Shadow (on main layer, no masking)
         layer.shadowColor = UIColor.black.cgColor
         layer.shadowOffset = CGSize(width: 0, height: 8)
         layer.shadowOpacity = 0.3
         layer.shadowRadius = 15
-        layer.masksToBounds = false
         
-        // Container view (for shadow to work)
+        // Container view (for gradient and content)
         containerView.backgroundColor = .clear
-        containerView.layer.cornerRadius = 24
+        containerView.layer.cornerRadius = 32  // More rounded!
         containerView.layer.masksToBounds = true
         containerView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(containerView)
+        
+        // Gradient background inside container
+        gradientLayer.cornerRadius = 32
+        containerView.layer.insertSublayer(gradientLayer, at: 0)
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
         
         // Icon Container
         iconContainerView.translatesAutoresizingMaskIntoConstraints = false
@@ -357,14 +394,13 @@ class OpponentSelectionCard: UIView {
         
         switch mode {
         case .playerVsAI:
-            // User icon vs Robot icon
             leftIconView.image = UIImage(systemName: "person.circle.fill")
             rightIconView.image = UIImage(systemName: "cpu")
             
         case .playerVsPlayer:
-            // Two user icons
             leftIconView.image = UIImage(systemName: "person.circle.fill")
             rightIconView.image = UIImage(systemName: "person.circle.fill")
         }
     }
+    
 }

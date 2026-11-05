@@ -304,54 +304,257 @@ class GameBoardController
         }
     }
     
+    // MARK: - AI: Public interface
+
     func aiPlaceMarble() throws -> (rowIndex: Int?, columnIndex: Int?)
     {
-        var rowIndex: Int = Int.random(in: 0...5)
-        var columnIndex: Int = Int.random(in: 0...5)
-        var hasCellBeenFound: Bool = false
-        var isBoardFull: Bool = false
-        var marbleLocation: (rowIndex: Int?, columnIndex: Int?) = (nil, nil)
-        
-        if(!gameBoard.isAgainstAiOpponent)
-        {
+        if !gameBoard.isAgainstAiOpponent {
             throw GeneralException.IllegalState(message: "Cannot use function aiPlaceMarble. The gameBoard isAgainstAiOpponent property has been set to false.")
         }
-        
-        while(!hasCellBeenFound && !isBoardFull)
-        {
-            do
-            {
-                try placeMarble(rowIndex: rowIndex, columnIndex: columnIndex)
-                marbleLocation.rowIndex = rowIndex
-                marbleLocation.columnIndex = columnIndex
-                hasCellBeenFound = true
-            }
-            catch GameBoardException.GameGridFull
-            {
-                isBoardFull = true
-            }
-            catch GameBoardException.CellOccupied
-            {
-                rowIndex = Int.random(in: 0...5)
-                columnIndex = Int.random(in: 0...5)
-            }
-            catch
-            {
+
+        switch gameBoard.aiDifficulty {
+        case .easy:
+            return try randomAIPlacement()
+        case .medium:
+            return try minimaxAIPlacement(depth: 1)
+        case .hard:
+            return try minimaxAIPlacement(depth: 2)
+        }
+    }
+
+    func aiRotateSubgrid() -> (subgrid: GameBoard.Subgrid, rotationDirection: GameBoard.RotationDirection)
+    {
+        // Non-easy modes pre-compute the rotation in aiPlaceMarble via findBestMove.
+        if let pending = pendingAIRotation {
+            pendingAIRotation = nil
+            rotateSubgrid(subgrid: pending.subgrid, rotationDirection: pending.rotationDirection)
+            return pending
+        }
+
+        // Easy / fallback: random rotation.
+        let subgrid = GameBoard.Subgrid.random()
+        let direction = GameBoard.RotationDirection.random()
+        rotateSubgrid(subgrid: subgrid, rotationDirection: direction)
+        return (subgrid, direction)
+    }
+
+    // MARK: - AI: Private placement helpers
+
+    private var pendingAIRotation: (subgrid: GameBoard.Subgrid, rotationDirection: GameBoard.RotationDirection)?
+
+    private func randomAIPlacement() throws -> (rowIndex: Int?, columnIndex: Int?)
+    {
+        var row = Int.random(in: 0...5)
+        var col = Int.random(in: 0...5)
+        var found = false
+        var full = false
+        var location: (rowIndex: Int?, columnIndex: Int?) = (nil, nil)
+
+        while !found && !full {
+            do {
+                try placeMarble(rowIndex: row, columnIndex: col)
+                location = (row, col)
+                found = true
+            } catch GameBoardException.GameGridFull {
+                full = true
+            } catch GameBoardException.CellOccupied {
+                row = Int.random(in: 0...5)
+                col = Int.random(in: 0...5)
+            } catch {
                 fatalError("Unaccounted for error thrown by placeMarble function")
             }
         }
-        return marbleLocation
+        return location
     }
-    
-    func aiRotateSubgrid() -> (subgrid: GameBoard.Subgrid, rotationDirection: GameBoard.RotationDirection)
+
+    private func minimaxAIPlacement(depth: Int) throws -> (rowIndex: Int?, columnIndex: Int?)
     {
-        var selectedSubgrid: GameBoard.Subgrid = .random()
-        var selectedRotationDirection: GameBoard.RotationDirection = .random()
-        var subgridRotationInfo: (subgrid: GameBoard.Subgrid, rotationDirection: GameBoard.RotationDirection) = (selectedSubgrid, selectedRotationDirection)
-        
-        rotateSubgrid(subgrid: selectedSubgrid, rotationDirection: selectedRotationDirection)
-        
-        return subgridRotationInfo
+        let grid = intGrid()
+        let move = findBestMove(grid: grid, numMarbles: gameBoard.numMarbles, depth: depth)
+        try placeMarble(rowIndex: move.row, columnIndex: move.col)
+        pendingAIRotation = (subgrid: move.subgrid, rotationDirection: move.direction)
+        return (move.row, move.col)
+    }
+
+    // MARK: - AI: Minimax engine
+
+    // Lightweight integer grid: 1 = AI (player2), -1 = human (player1), 0 = empty.
+    private typealias Grid = [[Int8]]
+
+    // All 8 rotation choices (4 subgrids × 2 directions).
+    private let allRotations: [(subgrid: GameBoard.Subgrid, clockwise: Bool)] = [
+        (.upperLeft, true),  (.upperLeft, false),
+        (.upperRight, true), (.upperRight, false),
+        (.lowerLeft, true),  (.lowerLeft, false),
+        (.lowerRight, true), (.lowerRight, false)
+    ]
+
+    private func intGrid() -> Grid
+    {
+        return gameBoard.gameGrid.map { row in
+            row.map { marble -> Int8 in
+                guard let marble = marble else { return 0 }
+                return marble.marbleOwner === gameBoard.player2Profile ? 1 : -1
+            }
+        }
+    }
+
+    // Pure in-place rotation on a copy of grid. Clockwise: new[r][c] = old[2-c][r]. Anticlockwise: new[r][c] = old[c][2-r].
+    private func rotateGrid(_ grid: Grid, subgrid: GameBoard.Subgrid, clockwise: Bool) -> Grid
+    {
+        var g = grid
+        let (ro, co): (Int, Int)
+        switch subgrid {
+        case .upperLeft:  (ro, co) = (0, 0)
+        case .upperRight: (ro, co) = (0, 3)
+        case .lowerLeft:  (ro, co) = (3, 0)
+        case .lowerRight: (ro, co) = (3, 3)
+        }
+        var sub = [[Int8]](repeating: [0, 0, 0], count: 3)
+        for r in 0..<3 { for c in 0..<3 { sub[r][c] = g[ro + r][co + c] } }
+        for r in 0..<3 {
+            for c in 0..<3 {
+                g[ro + r][co + c] = clockwise ? sub[2 - c][r] : sub[c][2 - r]
+            }
+        }
+        return g
+    }
+
+    // Returns 1 if AI has 5-in-a-row, -1 if human does, 0 otherwise.
+    private func winnerOnGrid(_ grid: Grid) -> Int8
+    {
+        let dirs: [(Int, Int)] = [(0,1),(1,0),(1,1),(1,-1)]
+        for r in 0..<6 {
+            for c in 0..<6 {
+                for (dr, dc) in dirs {
+                    let er = r + dr * 4, ec = c + dc * 4
+                    guard er >= 0 && er < 6 && ec >= 0 && ec < 6 else { continue }
+                    let first = grid[r][c]
+                    guard first != 0 else { continue }
+                    var win = true
+                    for k in 1..<5 { if grid[r + dr*k][c + dc*k] != first { win = false; break } }
+                    if win { return first }
+                }
+            }
+        }
+        return 0
+    }
+
+    // Score a 5-cell window for the heuristic evaluation.
+    private func scoreWindow(_ cells: [Int8]) -> Int
+    {
+        var ai = 0, human = 0
+        for v in cells { if v == 1 { ai += 1 } else if v == -1 { human += 1 } }
+        if ai > 0 && human > 0 { return 0 }
+        if ai > 0 {
+            switch ai {
+            case 5: return  10000
+            case 4: return    200
+            case 3: return     20
+            case 2: return      5
+            default: return     1
+            }
+        } else {
+            switch human {
+            case 5: return -10000
+            case 4: return   -300
+            case 3: return    -30
+            case 2: return     -7
+            default: return    -1
+            }
+        }
+    }
+
+    // Board heuristic: sum scores of all 32 windows of 5 on the 6×6 grid.
+    private func evaluateGrid(_ grid: Grid) -> Int
+    {
+        var score = 0
+        // Horizontal (6 rows × 2 starting columns)
+        for r in 0..<6 {
+            for sc in 0..<2 {
+                score += scoreWindow((0..<5).map { grid[r][sc + $0] })
+            }
+        }
+        // Vertical (2 starting rows × 6 columns)
+        for sr in 0..<2 {
+            for c in 0..<6 {
+                score += scoreWindow((0..<5).map { grid[sr + $0][c] })
+            }
+        }
+        // Diagonal ↘ (2×2 starting positions)
+        for sr in 0..<2 {
+            for sc in 0..<2 {
+                score += scoreWindow((0..<5).map { grid[sr + $0][sc + $0] })
+            }
+        }
+        // Diagonal ↙ (2×2 starting positions)
+        for sr in 0..<2 {
+            for sc in 4..<6 {
+                score += scoreWindow((0..<5).map { grid[sr + $0][sc - $0] })
+            }
+        }
+        return score
+    }
+
+    private func minimax(grid: Grid, numMarbles: Int, depth: Int, isMaximizing: Bool, alpha: Int, beta: Int) -> Int
+    {
+        var alpha = alpha
+        var beta = beta
+        let winner = winnerOnGrid(grid)
+        if winner ==  1 { return  10000 + depth }
+        if winner == -1 { return -10000 - depth }
+        if numMarbles == 36 || depth == 0 { return evaluateGrid(grid) }
+
+        let piece: Int8 = isMaximizing ? 1 : -1
+        var best = isMaximizing ? Int.min : Int.max
+
+        outerLoop: for r in 0..<6 {
+            for c in 0..<6 {
+                guard grid[r][c] == 0 else { continue }
+                var g = grid
+                g[r][c] = piece
+                for (subgrid, clockwise) in allRotations {
+                    let rotated = rotateGrid(g, subgrid: subgrid, clockwise: clockwise)
+                    let score = minimax(grid: rotated, numMarbles: numMarbles + 1, depth: depth - 1, isMaximizing: !isMaximizing, alpha: alpha, beta: beta)
+                    if isMaximizing {
+                        if score > best { best = score }
+                        if score > alpha { alpha = score }
+                    } else {
+                        if score < best { best = score }
+                        if score < beta { beta = score }
+                    }
+                    if beta <= alpha { break outerLoop }
+                }
+            }
+        }
+        return best
+    }
+
+    private func findBestMove(grid: Grid, numMarbles: Int, depth: Int) -> (row: Int, col: Int, subgrid: GameBoard.Subgrid, direction: GameBoard.RotationDirection)
+    {
+        var bestScore = Int.min
+        var bestRow = 0, bestCol = 0
+        var bestSubgrid: GameBoard.Subgrid = .upperLeft
+        var bestClockwise = true
+
+        for r in 0..<6 {
+            for c in 0..<6 {
+                guard grid[r][c] == 0 else { continue }
+                var g = grid
+                g[r][c] = 1
+                for (subgrid, clockwise) in allRotations {
+                    let rotated = rotateGrid(g, subgrid: subgrid, clockwise: clockwise)
+                    let score = minimax(grid: rotated, numMarbles: numMarbles + 1, depth: depth - 1, isMaximizing: false, alpha: Int.min, beta: Int.max)
+                    if score > bestScore {
+                        bestScore = score
+                        bestRow = r; bestCol = c
+                        bestSubgrid = subgrid; bestClockwise = clockwise
+                    }
+                }
+            }
+        }
+
+        return (bestRow, bestCol, bestSubgrid, bestClockwise ? .clockwise : .anticlockwise)
     }
     
     func checkWinCondition(rowIndex: Int, columnIndex: Int) -> PlayerProfile?

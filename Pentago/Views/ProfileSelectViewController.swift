@@ -13,6 +13,15 @@ class ProfileSelectViewController: UIViewController {
     // MARK: - Properties
     var profileManager: PlayerProfileManager?
     var nextScreen: MainMenuViewController.ProfileSelectScreenDestination = .editProfileScreen
+
+    /// When set, overrides all internal navigation — the closure is called with the selected profile.
+    var onProfileSelected: ((PlayerProfile) -> Void)?
+    /// Override the auto-generated title for the screen.
+    var customTitle: String?
+    /// Override the auto-generated subtitle for the screen.
+    var customSubtitle: String?
+    /// Set to false to hide the "Add Profile" cell (used in game-flow profile selection).
+    var showAddProfileCell: Bool = true
     
     // MARK: - UI Components
     private let scrollView = UIScrollView()
@@ -154,46 +163,64 @@ class ProfileSelectViewController: UIViewController {
     // MARK: - Helper Methods
     
     private func getTitleForScreen() -> String {
+        if let custom = customTitle { return custom }
         switch nextScreen {
-        case .editProfileScreen:
-            return "Select Profile"
-        case .gameplayStatsScreen:
-            return "View Statistics"
-        case .achievementScreen:
-            return "View Achievements"
+        case .editProfileScreen:    return "Select Profile"
+        case .gameplayStatsScreen:  return "View Statistics"
+        case .achievementScreen:    return "View Achievements"
         }
     }
-    
+
     private func getSubtitleForScreen() -> String {
+        if let custom = customSubtitle { return custom }
         switch nextScreen {
-        case .editProfileScreen:
-            return "Choose a profile to edit or create a new one"
-        case .gameplayStatsScreen:
-            return "Select a profile to view their game stats"
-        case .achievementScreen:
-            return "Select a profile to view their achievements"
+        case .editProfileScreen:    return "Choose a profile to edit or create a new one"
+        case .gameplayStatsScreen:  return "Select a profile to view their game stats"
+        case .achievementScreen:    return "Select a profile to view their achievements"
         }
     }
     
     private func handleProfileSelection(_ profile: PlayerProfile) {
+        // If a game-flow callback is set, use it instead of internal navigation
+        if let callback = onProfileSelected {
+            callback(profile)
+            return
+        }
+
         switch nextScreen {
         case .editProfileScreen:
-            // TODO: Navigate to edit profile screen
-            showAlert(title: "Edit Profile", message: "Navigate to edit screen for \(profile.userName)")
+            // Navigate to edit profile screen
+            let editProfileVC = EditProfileViewController()
+            editProfileVC.profile = profile
+            editProfileVC.profileManager = profileManager
+            editProfileVC.onProfileUpdated = { [weak self] updatedProfile in
+                // Reload the collection view when profile is updated
+                self?.collectionView.reloadData()
+            }
+            navigationController?.pushViewController(editProfileVC, animated: true)
             
         case .gameplayStatsScreen:
-            // TODO: Navigate to gameplay statistics screen
-            showAlert(title: "Statistics", message: "Show stats for \(profile.userName)")
+            let statsVC = GameplayStatisticsTableViewController()
+            statsVC.sourceProfile = profile
+            navigationController?.pushViewController(statsVC, animated: true)
             
         case .achievementScreen:
-            // TODO: Navigate to achievements screen
-            showAlert(title: "Achievements", message: "Show achievements for \(profile.userName)")
+            let achievementVC = AchievementTableViewController()
+            achievementVC.sourceProfile = profile
+            navigationController?.pushViewController(achievementVC, animated: true)
         }
     }
     
     private func handleAddNewProfile() {
-        // TODO: Navigate to create new profile screen
-        showAlert(title: "Create Profile", message: "Navigate to create new profile screen")
+        // Navigate to edit profile screen in creation mode
+        let editProfileVC = EditProfileViewController()
+        editProfileVC.isCreatingNewProfile = true
+        editProfileVC.profileManager = profileManager
+        editProfileVC.onProfileUpdated = { [weak self] _ in
+            // Reload the collection view when new profile is created
+            self?.collectionView.reloadData()
+        }
+        navigationController?.pushViewController(editProfileVC, animated: true)
     }
     
     private func showAlert(title: String, message: String) {
@@ -211,9 +238,8 @@ extension ProfileSelectViewController: UICollectionViewDataSource {
         guard let profileManager = profileManager else { return 0 }
         
         let profileCount = profileManager.getPlayerProfileArray().count
-        
-        // Add extra cell for "Add New Profile" only in edit mode
-        return nextScreen == .editProfileScreen ? profileCount + 1 : profileCount
+        // Add "Add New Profile" cell only in edit mode and when explicitly allowed
+        return (nextScreen == .editProfileScreen && showAddProfileCell) ? profileCount + 1 : profileCount
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
@@ -224,7 +250,7 @@ extension ProfileSelectViewController: UICollectionViewDataSource {
         let profiles = profileManager.getPlayerProfileArray()
         
         // Check if this is the "Add New Profile" cell
-        if nextScreen == .editProfileScreen && indexPath.item == profiles.count {
+        if nextScreen == .editProfileScreen && showAddProfileCell && indexPath.item == profiles.count {
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "AddProfileCell", for: indexPath) as! AddProfileCell
             return cell
         }
@@ -247,7 +273,7 @@ extension ProfileSelectViewController: UICollectionViewDelegate {
         let profiles = profileManager.getPlayerProfileArray()
         
         // Check if "Add New Profile" cell was tapped
-        if nextScreen == .editProfileScreen && indexPath.item == profiles.count {
+        if nextScreen == .editProfileScreen && showAddProfileCell && indexPath.item == profiles.count {
             handleAddNewProfile()
             return
         }
@@ -342,24 +368,10 @@ class ProfileCell: UICollectionViewCell {
     func configure(with profile: PlayerProfile) {
         usernameLabel.text = profile.userName
         
-        // Set avatar image based on profile picture enum
-        let avatarIcon = getAvatarIcon(for: profile.profilePicture)
-        avatarImageView.image = avatarIcon
+        avatarImageView.image = ImageAssetFactory.getProfilePictureUIImage(profilePicture: profile.profilePicture)
+        avatarImageView.contentMode = .scaleAspectFill
         
-        // Set color ring
         colorRing.layer.borderColor = getMarbleColor(for: profile.marbleColour).cgColor
-    }
-    
-    private func getAvatarIcon(for picture: PlayerProfile.ProfilePicture) -> UIImage? {
-        // Map profile pictures to SF Symbols
-        switch picture {
-        case .cpuRobot:
-            return UIImage(systemName: "cpu")
-        default:
-            // For other profile pictures, use a person icon
-            // You can expand this with more specific mappings
-            return UIImage(systemName: "person.circle.fill")
-        }
     }
     
     private func getMarbleColor(for colour: Marble.MarbleColour) -> UIColor {

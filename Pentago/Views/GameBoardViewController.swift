@@ -67,7 +67,6 @@ class GameBoardViewController: UIViewController
     // MARK: - Rotation Panel
 
     private let rotationPanel = UIView()
-    private let rotationPanelLabel = UILabel()
     private let clockwiseButton = UIButton(type: .system)
     private let anticlockwiseButton = UIButton(type: .system)
 
@@ -257,13 +256,6 @@ class GameBoardViewController: UIViewController
         rotationPanel.isHidden = true
         view.addSubview(rotationPanel)
 
-        rotationPanelLabel.text = "Rotate the selected subgrid"
-        rotationPanelLabel.font = .systemFont(ofSize: 12, weight: .medium)
-        rotationPanelLabel.textColor = UIColor.white.withAlphaComponent(0.75)
-        rotationPanelLabel.textAlignment = .center
-        rotationPanelLabel.translatesAutoresizingMaskIntoConstraints = false
-        rotationPanel.addSubview(rotationPanelLabel)
-
         styleRotationButton(anticlockwiseButton, symbolName: "arrow.counterclockwise", label: "Anticlockwise")
         anticlockwiseButton.addTarget(self, action: #selector(anticlockwiseRotationAnimation), for: .touchUpInside)
         rotationPanel.addSubview(anticlockwiseButton)
@@ -364,9 +356,6 @@ class GameBoardViewController: UIViewController
             rotationPanel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: edgePad),
             rotationPanel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -edgePad),
             rotationPanel.heightAnchor.constraint(equalToConstant: 72),
-
-            rotationPanelLabel.centerXAnchor.constraint(equalTo: rotationPanel.centerXAnchor),
-            rotationPanelLabel.centerYAnchor.constraint(equalTo: rotationPanel.centerYAnchor),
 
             anticlockwiseButton.leadingAnchor.constraint(equalTo: rotationPanel.leadingAnchor, constant: 16),
             anticlockwiseButton.topAnchor.constraint(equalTo: rotationPanel.topAnchor, constant: 10),
@@ -490,12 +479,13 @@ class GameBoardViewController: UIViewController
         // Update game model and get the cumulative angle for this subgrid
         let subgrid = gameSubgrid(for: cv)
         gameController.rotateSubgrid(subgrid: subgrid, rotationDirection: .clockwise)
+        let previousAngle = rotationMultiplier(for: cv)
         updateRotationMultiplier(for: cv, delta: .pi / 2)
         let finalAngle = rotationMultiplier(for: cv)
 
         gamePhase = .animationOccuring
 
-        runRotationAnimation(cv: cv, finalAngle: finalAngle) {
+        runRotationAnimation(cv: cv, previousAngle: previousAngle, finalAngle: finalAngle) {
             self.onSubgridRotate()
 
             if self.gamePhase != .gameOver {
@@ -518,12 +508,13 @@ class GameBoardViewController: UIViewController
 
         let subgrid = gameSubgrid(for: cv)
         gameController.rotateSubgrid(subgrid: subgrid, rotationDirection: .anticlockwise)
+        let previousAngle = rotationMultiplier(for: cv)
         updateRotationMultiplier(for: cv, delta: -.pi / 2)
         let finalAngle = rotationMultiplier(for: cv)
 
         gamePhase = .animationOccuring
 
-        runRotationAnimation(cv: cv, finalAngle: finalAngle) {
+        runRotationAnimation(cv: cv, previousAngle: previousAngle, finalAngle: finalAngle) {
             self.onSubgridRotate()
 
             if self.gamePhase != .gameOver {
@@ -536,20 +527,22 @@ class GameBoardViewController: UIViewController
         }
     }
 
-    // Shrink → rotate → grow: avoids cells clipping the container during rotation
-    private func runRotationAnimation(cv: UICollectionView, finalAngle: CGFloat, completion: @escaping () -> Void)
+    // Shrink → rotate → grow: avoids cells clipping the container during rotation.
+    // previousAngle preserves the cumulative rotation during the shrink phase so the
+    // rotate phase only sweeps the delta (90°), not the full cumulative angle.
+    private func runRotationAnimation(cv: UICollectionView, previousAngle: CGFloat, finalAngle: CGFloat, completion: @escaping () -> Void)
     {
         let shrinkDuration = 0.12
         let rotateDuration = Duration.gridRotationDuration.rawValue - 0.24
         let growDuration = 0.12
 
-        UIView.animate(withDuration: shrinkDuration, options: .curveEaseIn) {
-            cv.transform = CGAffineTransform(scaleX: 0.72, y: 0.72)
+        UIView.animate(withDuration: shrinkDuration, delay: 0, options: .curveEaseIn) {
+            cv.transform = CGAffineTransform(rotationAngle: previousAngle).scaledBy(x: 0.72, y: 0.72)
         } completion: { _ in
-            UIView.animate(withDuration: rotateDuration, options: .curveEaseInOut) {
+            UIView.animate(withDuration: rotateDuration, delay: 0, options: .curveEaseInOut) {
                 cv.transform = CGAffineTransform(rotationAngle: finalAngle).scaledBy(x: 0.72, y: 0.72)
             } completion: { _ in
-                UIView.animate(withDuration: growDuration, options: .curveEaseOut) {
+                UIView.animate(withDuration: growDuration, delay: 0, options: .curveEaseOut) {
                     cv.transform = CGAffineTransform(rotationAngle: finalAngle)
                 } completion: { _ in
                     completion()
@@ -587,13 +580,14 @@ class GameBoardViewController: UIViewController
             let aiDirection = aiRotateInfo.rotationDirection
 
             let cv = collectionView(for: aiSubgrid)
+            let previousAngle = rotationMultiplier(for: cv)
             updateRotationMultiplier(for: cv, delta: aiDirection == .clockwise ? .pi / 2 : -.pi / 2)
             let finalAngle = rotationMultiplier(for: cv)
 
             DispatchQueue.main.asyncAfter(deadline: .now() + Duration.rotateSubgridWait.rawValue) {
                 self.gamePhase = .animationOccuring
 
-                self.runRotationAnimation(cv: cv, finalAngle: finalAngle) {
+                self.runRotationAnimation(cv: cv, previousAngle: previousAngle, finalAngle: finalAngle) {
                     self.onSubgridRotate()
 
                     if self.gamePhase != .gameOver {

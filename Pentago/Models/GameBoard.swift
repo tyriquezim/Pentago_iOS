@@ -14,8 +14,15 @@ class GameBoard
     let isAgainstAiOpponent: Bool
     var currentTurnPlayerProfile: PlayerProfile
     var numMarbles: Int
-    
-    init(player1Profile: PlayerProfile, player2Profile: PlayerProfile, isAgainstAiOpponent: Bool)
+    var aiDifficulty: AIDifficulty
+
+    enum AIDifficulty {
+        case easy    // random placement and rotation
+        case medium  // evaluates all own moves, picks best
+        case hard    // looks one opponent response ahead
+    }
+
+    init(player1Profile: PlayerProfile, player2Profile: PlayerProfile, isAgainstAiOpponent: Bool, aiDifficulty: AIDifficulty = .medium)
     {
         self.gridSideLength = 6
         self.player1Profile = player1Profile
@@ -23,7 +30,8 @@ class GameBoard
         self.isAgainstAiOpponent = isAgainstAiOpponent
         self.currentTurnPlayerProfile = self.player1Profile
         self.numMarbles = 0
-        
+        self.aiDifficulty = aiDifficulty
+
         self.gameGrid = Array(repeating: Array(repeating: nil, count: gridSideLength), count: gridSideLength)
     }
     

@@ -7,12 +7,13 @@
 
 import UIKit
 
-class EditProfileViewController: UIViewController {
+class EditProfileViewController: UIViewController, UITextFieldDelegate {
     
     // MARK: - Properties
     var profile: PlayerProfile?
     var profileManager: PlayerProfileManager?
     var onProfileUpdated: ((PlayerProfile) -> Void)?
+    var isCreatingNewProfile: Bool = false
     
     // MARK: - UI Components
     private let scrollView = UIScrollView()
@@ -40,11 +41,11 @@ class EditProfileViewController: UIViewController {
     
     private let player1Container = UIView()
     private let player1Label = UILabel()
-    private let player1StatusLabel = UILabel()
+    private let player1Switch = UISwitch()
     
     private let player2Container = UIView()
     private let player2Label = UILabel()
-    private let player2StatusLabel = UILabel()
+    private let player2Switch = UISwitch()
     
     private let profilePictureContainer = UIView()
     private let profilePictureLabel = UILabel()
@@ -58,29 +59,47 @@ class EditProfileViewController: UIViewController {
     private let deleteButton = UIButton(type: .system)
     
     // Available profile pictures and colors
-    private let availableProfilePictures = ["Tiger", "Lion", "Bear", "Eagle", "Wolf", "Panda", "Fox", "Owl"]
-    private let availableMarbleColors = [
-        ("Red", UIColor.systemRed),
-        ("Blue", UIColor.systemBlue),
-        ("Green", UIColor.systemGreen),
-        ("Yellow", UIColor.systemYellow),
-        ("Purple", UIColor.systemPurple),
-        ("Orange", UIColor.systemOrange),
-        ("Pink", UIColor.systemPink),
-        ("Teal", UIColor.systemTeal)
+    private let availableProfilePictures: [PlayerProfile.ProfilePicture] = [
+        .tiger, .lion, .giraffe, .zebra, .ostrich, .puppy, .beach, .desert, .mountain, .tree, .defaultIcon, .cpuRobot
+    ]
+    private let availableMarbleColors: [(Marble.MarbleColour, UIColor)] = [
+        (.red, UIColor.systemRed),
+        (.blue, UIColor.systemBlue),
+        (.green, UIColor.systemGreen),
+        (.yellow, UIColor.systemYellow),
+        (.purple, UIColor.systemPurple),
+        (.orange, UIColor.systemOrange),
+        (.pink, UIColor.systemPink),
+        (.black, UIColor.black),
+        (.grey, UIColor.systemGray)
     ]
     
-    private var selectedProfilePicture: String = "Tiger"
-    private var selectedMarbleColor: String = "Red"
+    private var selectedProfilePicture: PlayerProfile.ProfilePicture = .tiger
+    private var selectedMarbleColor: Marble.MarbleColour = .red
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // Create a default profile if in creation mode
+        if isCreatingNewProfile {
+            profile = PlayerProfile(
+                userName: "",
+                profilePicture: .tiger,
+                marbleColour: .red
+            )
+        }
+        
         setupUI()
         setupConstraints()
         setupActions()
         loadProfileData()
+        
+        // Disable back button if creating new profile with empty name
+        if isCreatingNewProfile {
+            navigationItem.hidesBackButton = true
+            title = "Create Profile"
+        }
         
         // Dismiss keyboard on tap
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissKeyboard))
@@ -102,7 +121,14 @@ class EditProfileViewController: UIViewController {
     // MARK: - Setup Methods
     
     private func setupUI() {
-        title = "Edit Profile"
+        title = isCreatingNewProfile ? "Create Profile" : "Edit Profile"
+        
+        // Add Save button to navigation bar if creating new profile
+        if isCreatingNewProfile {
+            let saveButton = UIBarButtonItem(title: "Save", style: .done, target: self, action: #selector(saveNewProfile))
+            navigationItem.rightBarButtonItem = saveButton
+            saveButton.isEnabled = false // Disabled until name is entered
+        }
         
         // Gradient Background
         gradientLayer.colors = [
@@ -142,7 +168,7 @@ class EditProfileViewController: UIViewController {
         profileImageView.layer.cornerRadius = 75
         profileImageView.layer.borderWidth = 4
         profileImageView.layer.borderColor = UIColor.white.cgColor
-        profileImageView.image = UIImage(named: "Tiger") ?? UIImage(systemName: "person.circle.fill")
+        profileImageView.image = ImageAssetFactory.getProfilePictureUIImage(profilePicture: .tiger)
         profileImageView.translatesAutoresizingMaskIntoConstraints = false
         profileDisplayContainer.addSubview(profileImageView)
         
@@ -170,23 +196,30 @@ class EditProfileViewController: UIViewController {
         marbleColorNameLabel.translatesAutoresizingMaskIntoConstraints = false
         profileDisplayContainer.addSubview(marbleColorNameLabel)
         
-        // ID Label
+        // ID Label - Hide if creating new profile
         idLabel.font = UIFont.systemFont(ofSize: 11, weight: .medium)
         idLabel.textColor = UIColor.white.withAlphaComponent(0.7)
         idLabel.textAlignment = .center
         idLabel.numberOfLines = 2
         idLabel.text = "ID:\nXXXXXXXX-XXXX-XXXX"
         idLabel.translatesAutoresizingMaskIntoConstraints = false
+        idLabel.isHidden = isCreatingNewProfile
         profileDisplayContainer.addSubview(idLabel)
         
         // Form Container
-        formContainer.backgroundColor = UIColor.white.withAlphaComponent(0.95)
-        formContainer.layer.cornerRadius = 20
+        formContainer.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        formContainer.layer.cornerRadius = 24
+        formContainer.layer.borderWidth = 1
+        formContainer.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
         formContainer.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(formContainer)
         
         setupFormFields()
-        setupDeleteButton()
+        
+        // Only add delete button if editing existing profile
+        if !isCreatingNewProfile {
+            setupDeleteButton()
+        }
     }
     
     private func setupFormFields() {
@@ -196,16 +229,34 @@ class EditProfileViewController: UIViewController {
         
         usernameLabel.text = "Username"
         usernameLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        usernameLabel.textColor = .black
+        usernameLabel.textColor = .white
         usernameLabel.translatesAutoresizingMaskIntoConstraints = false
         usernameFieldContainer.addSubview(usernameLabel)
         
         usernameTextField.placeholder = "Enter username"
         usernameTextField.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        usernameTextField.textColor = UIColor.systemBlue
-        usernameTextField.borderStyle = .roundedRect
-        usernameTextField.backgroundColor = UIColor.systemGray6
+        usernameTextField.textColor = .white
+        usernameTextField.attributedPlaceholder = NSAttributedString(
+            string: "Enter username",
+            attributes: [.foregroundColor: UIColor.white.withAlphaComponent(0.5)]
+        )
+        usernameTextField.borderStyle = .none
+        usernameTextField.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+        usernameTextField.layer.cornerRadius = 8
+        usernameTextField.layer.borderWidth = 1
+        usernameTextField.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        usernameTextField.autocorrectionType = .no
+        usernameTextField.autocapitalizationType = .words
+        usernameTextField.returnKeyType = .done
+        usernameTextField.delegate = self
+        // Add padding to text field
+        usernameTextField.leftView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: 40))
+        usernameTextField.leftViewMode = .always
+        usernameTextField.rightView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: 40))
+        usernameTextField.rightViewMode = .always
         usernameTextField.translatesAutoresizingMaskIntoConstraints = false
+        usernameTextField.autocorrectionType = .no
+        usernameTextField.spellCheckingType = .no
         usernameFieldContainer.addSubview(usernameTextField)
         
         // Player 1 Status
@@ -214,15 +265,13 @@ class EditProfileViewController: UIViewController {
         
         player1Label.text = "Player 1"
         player1Label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        player1Label.textColor = .black
+        player1Label.textColor = .white
         player1Label.translatesAutoresizingMaskIntoConstraints = false
         player1Container.addSubview(player1Label)
         
-        player1StatusLabel.text = "Active"
-        player1StatusLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        player1StatusLabel.textColor = UIColor.systemBlue
-        player1StatusLabel.translatesAutoresizingMaskIntoConstraints = false
-        player1Container.addSubview(player1StatusLabel)
+        player1Switch.onTintColor = UIColor.systemGreen
+        player1Switch.translatesAutoresizingMaskIntoConstraints = false
+        player1Container.addSubview(player1Switch)
         
         // Player 2 Status
         player2Container.translatesAutoresizingMaskIntoConstraints = false
@@ -230,15 +279,13 @@ class EditProfileViewController: UIViewController {
         
         player2Label.text = "Player 2"
         player2Label.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        player2Label.textColor = .black
+        player2Label.textColor = .white
         player2Label.translatesAutoresizingMaskIntoConstraints = false
         player2Container.addSubview(player2Label)
         
-        player2StatusLabel.text = "Inactive"
-        player2StatusLabel.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        player2StatusLabel.textColor = UIColor.systemBlue
-        player2StatusLabel.translatesAutoresizingMaskIntoConstraints = false
-        player2Container.addSubview(player2StatusLabel)
+        player2Switch.onTintColor = UIColor.systemGreen
+        player2Switch.translatesAutoresizingMaskIntoConstraints = false
+        player2Container.addSubview(player2Switch)
         
         // Profile Picture Selection
         profilePictureContainer.translatesAutoresizingMaskIntoConstraints = false
@@ -246,16 +293,22 @@ class EditProfileViewController: UIViewController {
         
         profilePictureLabel.text = "Profile Picture"
         profilePictureLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        profilePictureLabel.textColor = .black
+        profilePictureLabel.textColor = .white
         profilePictureLabel.translatesAutoresizingMaskIntoConstraints = false
         profilePictureContainer.addSubview(profilePictureLabel)
         
         profilePictureButton.setTitle("Tiger", for: .normal)
         profilePictureButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        profilePictureButton.setTitleColor(UIColor.systemBlue, for: .normal)
+        profilePictureButton.setTitleColor(UIColor.systemBlue.withAlphaComponent(0.9), for: .normal)
         profilePictureButton.contentHorizontalAlignment = .right
         profilePictureButton.translatesAutoresizingMaskIntoConstraints = false
         profilePictureContainer.addSubview(profilePictureButton)
+        
+        // Add chevron icon to profile picture button
+        let chevronImage = UIImage(systemName: "chevron.right")
+        profilePictureButton.setImage(chevronImage, for: .normal)
+        profilePictureButton.semanticContentAttribute = .forceRightToLeft
+        profilePictureButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 0)
         
         // Marble Color Selection
         marbleColorContainer.translatesAutoresizingMaskIntoConstraints = false
@@ -263,16 +316,21 @@ class EditProfileViewController: UIViewController {
         
         marbleColorLabel.text = "Marble Colour"
         marbleColorLabel.font = UIFont.systemFont(ofSize: 16, weight: .semibold)
-        marbleColorLabel.textColor = .black
+        marbleColorLabel.textColor = .white
         marbleColorLabel.translatesAutoresizingMaskIntoConstraints = false
         marbleColorContainer.addSubview(marbleColorLabel)
         
         marbleColorButton.setTitle("Red", for: .normal)
         marbleColorButton.titleLabel?.font = UIFont.systemFont(ofSize: 16, weight: .medium)
-        marbleColorButton.setTitleColor(UIColor.systemBlue, for: .normal)
+        marbleColorButton.setTitleColor(UIColor.systemBlue.withAlphaComponent(0.9), for: .normal)
         marbleColorButton.contentHorizontalAlignment = .right
         marbleColorButton.translatesAutoresizingMaskIntoConstraints = false
         marbleColorContainer.addSubview(marbleColorButton)
+        
+        // Add chevron icon to marble color button
+        marbleColorButton.setImage(chevronImage, for: .normal)
+        marbleColorButton.semanticContentAttribute = .forceRightToLeft
+        marbleColorButton.imageEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 0)
         
         // Add separators
         addSeparator(to: usernameFieldContainer)
@@ -282,8 +340,15 @@ class EditProfileViewController: UIViewController {
     }
     
     private func setupDeleteButton() {
-        deleteButton.setTitle("🗑 Delete Profile", for: .normal)
-        deleteButton.setTitleColor(.systemRed, for: .normal)
+        // Create a configuration for the button
+        var config = UIButton.Configuration.plain()
+        config.title = "Delete Profile"
+        config.image = UIImage(systemName: "trash")
+        config.imagePlacement = .leading
+        config.imagePadding = 8
+        config.baseForegroundColor = .systemRed
+        
+        deleteButton.configuration = config
         deleteButton.titleLabel?.font = UIFont.systemFont(ofSize: 18, weight: .semibold)
         deleteButton.backgroundColor = UIColor.systemRed.withAlphaComponent(0.1)
         deleteButton.layer.cornerRadius = 15
@@ -295,7 +360,7 @@ class EditProfileViewController: UIViewController {
     
     private func addSeparator(to container: UIView) {
         let separator = UIView()
-        separator.backgroundColor = UIColor.separator
+        separator.backgroundColor = UIColor.white.withAlphaComponent(0.2)
         separator.translatesAutoresizingMaskIntoConstraints = false
         container.addSubview(separator)
         
@@ -308,7 +373,7 @@ class EditProfileViewController: UIViewController {
     }
     
     private func setupConstraints() {
-        NSLayoutConstraint.activate([
+        var constraints: [NSLayoutConstraint] = [
             // ScrollView
             scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
@@ -384,8 +449,8 @@ class EditProfileViewController: UIViewController {
             player1Label.leadingAnchor.constraint(equalTo: player1Container.leadingAnchor),
             player1Label.centerYAnchor.constraint(equalTo: player1Container.centerYAnchor),
             
-            player1StatusLabel.trailingAnchor.constraint(equalTo: player1Container.trailingAnchor),
-            player1StatusLabel.centerYAnchor.constraint(equalTo: player1Container.centerYAnchor),
+            player1Switch.trailingAnchor.constraint(equalTo: player1Container.trailingAnchor),
+            player1Switch.centerYAnchor.constraint(equalTo: player1Container.centerYAnchor),
             
             // Player 2 Container
             player2Container.topAnchor.constraint(equalTo: player1Container.bottomAnchor),
@@ -396,8 +461,8 @@ class EditProfileViewController: UIViewController {
             player2Label.leadingAnchor.constraint(equalTo: player2Container.leadingAnchor),
             player2Label.centerYAnchor.constraint(equalTo: player2Container.centerYAnchor),
             
-            player2StatusLabel.trailingAnchor.constraint(equalTo: player2Container.trailingAnchor),
-            player2StatusLabel.centerYAnchor.constraint(equalTo: player2Container.centerYAnchor),
+            player2Switch.trailingAnchor.constraint(equalTo: player2Container.trailingAnchor),
+            player2Switch.centerYAnchor.constraint(equalTo: player2Container.centerYAnchor),
             
             // Profile Picture Container
             profilePictureContainer.topAnchor.constraint(equalTo: player2Container.bottomAnchor),
@@ -425,14 +490,25 @@ class EditProfileViewController: UIViewController {
             marbleColorButton.trailingAnchor.constraint(equalTo: marbleColorContainer.trailingAnchor),
             marbleColorButton.centerYAnchor.constraint(equalTo: marbleColorContainer.centerYAnchor),
             marbleColorButton.widthAnchor.constraint(equalToConstant: 150),
-            
-            // Delete Button
-            deleteButton.topAnchor.constraint(equalTo: formContainer.bottomAnchor, constant: 40),
-            deleteButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
-            deleteButton.widthAnchor.constraint(equalToConstant: 250),
-            deleteButton.heightAnchor.constraint(equalToConstant: 50),
-            deleteButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30)
-        ])
+        ]
+        
+        // Add delete button constraints only if not creating new profile
+        if !isCreatingNewProfile {
+            constraints.append(contentsOf: [
+                deleteButton.topAnchor.constraint(equalTo: formContainer.bottomAnchor, constant: 30),
+                deleteButton.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+                deleteButton.widthAnchor.constraint(equalToConstant: 250),
+                deleteButton.heightAnchor.constraint(equalToConstant: 50),
+                deleteButton.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -100)
+            ])
+        } else {
+            // If creating new profile, form container should be the last element
+            constraints.append(
+                formContainer.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -100)
+            )
+        }
+        
+        NSLayoutConstraint.activate(constraints)
     }
     
     private func setupActions() {
@@ -440,6 +516,8 @@ class EditProfileViewController: UIViewController {
         marbleColorButton.addTarget(self, action: #selector(selectMarbleColor), for: .touchUpInside)
         deleteButton.addTarget(self, action: #selector(deleteProfileTapped), for: .touchUpInside)
         usernameTextField.addTarget(self, action: #selector(usernameChanged), for: .editingChanged)
+        player1Switch.addTarget(self, action: #selector(player1SwitchChanged), for: .valueChanged)
+        player2Switch.addTarget(self, action: #selector(player2SwitchChanged), for: .valueChanged)
     }
     
     private func startAnimations() {
@@ -450,47 +528,75 @@ class EditProfileViewController: UIViewController {
     private func loadProfileData() {
         guard let profile = profile else { return }
         
-        usernameTextField.text = profile.username
-        usernameDisplayLabel.text = profile.username
-        idLabel.text = "ID:\n\(profile.id.uuidString)"
+        usernameTextField.text = profile.userName
+        usernameDisplayLabel.text = profile.userName
+        idLabel.text = "ID:\n\(profile.playerID.uuidString)"
         
         selectedProfilePicture = profile.profilePicture
-        profilePictureButton.setTitle(profile.profilePicture, for: .normal)
-        profileImageView.image = UIImage(named: profile.profilePicture) ?? UIImage(systemName: "person.circle.fill")
+        profilePictureButton.setTitle(profile.profilePicture.rawValue, for: .normal)
+        profileImageView.image = ImageAssetFactory.getProfilePictureUIImage(profilePicture: profile.profilePicture)
         
         selectedMarbleColor = profile.marbleColour
-        marbleColorButton.setTitle(profile.marbleColour, for: .normal)
-        marbleColorNameLabel.text = profile.marbleColour
+        marbleColorButton.setTitle(profile.marbleColour.rawValue, for: .normal)
+        marbleColorNameLabel.text = profile.marbleColour.rawValue
         
         if let colorTuple = availableMarbleColors.first(where: { $0.0 == profile.marbleColour }) {
             marbleColorView.backgroundColor = colorTuple.1
         }
         
-        player1StatusLabel.text = profile.player1 ? "Active" : "Inactive"
-        player1StatusLabel.textColor = profile.player1 ? .systemBlue : .systemGray
-        
-        player2StatusLabel.text = profile.player2 ? "Active" : "Inactive"
-        player2StatusLabel.textColor = profile.player2 ? .systemBlue : .systemGray
+        player1Switch.isOn = profile.isLocalPlayer1
+        player2Switch.isOn = profile.isLocalPlayer2
     }
     
     // MARK: - Actions
     
     @objc private func usernameChanged() {
-        usernameDisplayLabel.text = usernameTextField.text?.isEmpty == true ? "Username" : usernameTextField.text
-        profile?.username = usernameTextField.text ?? ""
-        saveProfile()
+        let newUsername = usernameTextField.text?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        usernameDisplayLabel.text = newUsername.isEmpty ? "Username" : newUsername
+        profile?.userName = newUsername
+        
+        // Enable/disable save button based on whether username is empty
+        if isCreatingNewProfile {
+            navigationItem.rightBarButtonItem?.isEnabled = !newUsername.isEmpty
+        } else {
+            if let profile = profile {
+                onProfileUpdated?(profile)
+            }
+        }
+    }
+    
+    @objc private func player1SwitchChanged() {
+        profile?.isLocalPlayer1 = player1Switch.isOn
+        if let profile = profile {
+            onProfileUpdated?(profile)
+        }
+        // Update the switches state in case the profile logic changed them
+        player1Switch.isOn = profile?.isLocalPlayer1 ?? false
+        player2Switch.isOn = profile?.isLocalPlayer2 ?? false
+    }
+    
+    @objc private func player2SwitchChanged() {
+        profile?.isLocalPlayer2 = player2Switch.isOn
+        if let profile = profile {
+            onProfileUpdated?(profile)
+        }
+        // Update the switches state in case the profile logic changed them
+        player1Switch.isOn = profile?.isLocalPlayer1 ?? false
+        player2Switch.isOn = profile?.isLocalPlayer2 ?? false
     }
     
     @objc private func selectProfilePicture() {
         let alert = UIAlertController(title: "Select Profile Picture", message: nil, preferredStyle: .actionSheet)
         
         for picture in availableProfilePictures {
-            alert.addAction(UIAlertAction(title: picture, style: .default, handler: { _ in
+            alert.addAction(UIAlertAction(title: picture.rawValue, style: .default, handler: { _ in
                 self.selectedProfilePicture = picture
-                self.profilePictureButton.setTitle(picture, for: .normal)
-                self.profileImageView.image = UIImage(named: picture) ?? UIImage(systemName: "person.circle.fill")
+                self.profilePictureButton.setTitle(picture.rawValue, for: .normal)
+                self.profileImageView.image = ImageAssetFactory.getProfilePictureUIImage(profilePicture: picture)
                 self.profile?.profilePicture = picture
-                self.saveProfile()
+                if let profile = self.profile {
+                    self.onProfileUpdated?(profile)
+                }
             }))
         }
         
@@ -508,13 +614,15 @@ class EditProfileViewController: UIViewController {
         let alert = UIAlertController(title: "Select Marble Color", message: nil, preferredStyle: .actionSheet)
         
         for colorTuple in availableMarbleColors {
-            alert.addAction(UIAlertAction(title: colorTuple.0, style: .default, handler: { _ in
+            alert.addAction(UIAlertAction(title: colorTuple.0.rawValue, style: .default, handler: { _ in
                 self.selectedMarbleColor = colorTuple.0
-                self.marbleColorButton.setTitle(colorTuple.0, for: .normal)
+                self.marbleColorButton.setTitle(colorTuple.0.rawValue, for: .normal)
                 self.marbleColorView.backgroundColor = colorTuple.1
-                self.marbleColorNameLabel.text = colorTuple.0
+                self.marbleColorNameLabel.text = colorTuple.0.rawValue
                 self.profile?.marbleColour = colorTuple.0
-                self.saveProfile()
+                if let profile = self.profile {
+                    self.onProfileUpdated?(profile)
+                }
             }))
         }
         
@@ -549,15 +657,53 @@ class EditProfileViewController: UIViewController {
     
     // MARK: - Helper Methods
     
-    private func saveProfile() {
-        guard let profile = profile else { return }
-        profileManager?.updateProfile(profile)
-        onProfileUpdated?(profile)
+    @objc private func saveNewProfile() {
+        guard let profile = profile,
+              let profileManager = profileManager,
+              !profile.userName.isEmpty else { return }
+        
+        // Try to add the profile
+        do {
+            try profileManager.addPlayerProfile(newProfile: profile)
+            
+            // Notify that profile was created
+            onProfileUpdated?(profile)
+            
+            // Pop back to profile list
+            navigationController?.popViewController(animated: true)
+        } catch {
+            // Show error if profile couldn't be added (e.g., duplicate username)
+            let alert = UIAlertController(
+                title: "Error",
+                message: "Could not create profile. A profile with this username may already exist.",
+                preferredStyle: .alert
+            )
+            alert.addAction(UIAlertAction(title: "OK", style: .default))
+            present(alert, animated: true)
+        }
     }
     
     private func deleteProfile() {
-        guard let profile = profile else { return }
-        profileManager?.deleteProfile(profile)
+        guard let profile = profile,
+              let profileManager = profileManager else { return }
+        
+        // Find the index of the profile in the array
+        let profiles = profileManager.getPlayerProfileArray()
+        if let index = profiles.firstIndex(where: { $0.playerID == profile.playerID }) {
+            profileManager.removePlayerProfile(index: index)
+        }
+        
         navigationController?.popViewController(animated: true)
     }
 }
+
+// MARK: - UITextFieldDelegate
+
+extension EditProfileViewController {
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        return true
+    }
+}
+
