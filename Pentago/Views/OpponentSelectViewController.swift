@@ -218,6 +218,13 @@ class OpponentSelectViewController: UIViewController
             return
         }
 
+        guard player1.marbleColour != player2.marbleColour else {
+            showAlert(
+                title: "Matching Marble Colors",
+                message: "Both players have the same marble color. Go to Profile Settings and change one player's marble color before starting a match.")
+            return
+        }
+
         startGame(player1: player1, player2: player2, isAgainstAI: false)
     }
 

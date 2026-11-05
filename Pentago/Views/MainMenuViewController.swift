@@ -453,6 +453,7 @@ class MainMenuViewController: UIViewController
     @objc private func profileSettingsButtonTapped() {
         let profileSelectVC = ProfileSelectViewController()
         profileSelectVC.profileManager = self.profileManager
+        profileSelectVC.achievementObserverStore = self.achievementObserverStore
         profileSelectVC.nextScreen = .editProfileScreen
         navigationController?.pushViewController(profileSelectVC, animated: true)
     }

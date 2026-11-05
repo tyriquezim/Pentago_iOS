@@ -12,6 +12,7 @@ class EditProfileViewController: UIViewController, UITextFieldDelegate {
     // MARK: - Properties
     var profile: PlayerProfile?
     var profileManager: PlayerProfileManager?
+    var achievementObserverStore: AchievementObserverStore?
     var onProfileUpdated: ((PlayerProfile) -> Void)?
     var isCreatingNewProfile: Bool = false
     
@@ -60,7 +61,7 @@ class EditProfileViewController: UIViewController, UITextFieldDelegate {
     
     // Available profile pictures and colors
     private let availableProfilePictures: [PlayerProfile.ProfilePicture] = [
-        .tiger, .lion, .giraffe, .zebra, .ostrich, .puppy, .beach, .desert, .mountain, .tree, .defaultIcon, .cpuRobot
+        .tiger, .lion, .giraffe, .zebra, .ostrich, .puppy, .beach, .desert, .mountain, .tree, .defaultIcon
     ]
     private let availableMarbleColors: [(Marble.MarbleColour, UIColor)] = [
         (.red, UIColor.systemRed),
@@ -70,8 +71,7 @@ class EditProfileViewController: UIViewController, UITextFieldDelegate {
         (.purple, UIColor.systemPurple),
         (.orange, UIColor.systemOrange),
         (.pink, UIColor.systemPink),
-        (.black, UIColor.black),
-        (.grey, UIColor.systemGray)
+        (.black, UIColor.black)
     ]
     
     private var selectedProfilePicture: PlayerProfile.ProfilePicture = .tiger
@@ -566,21 +566,29 @@ class EditProfileViewController: UIViewController, UITextFieldDelegate {
     }
     
     @objc private func player1SwitchChanged() {
+        if player1Switch.isOn, let profileManager = profileManager {
+            for other in profileManager.getPlayerProfileArray() where other !== profile {
+                other.isLocalPlayer1 = false
+            }
+        }
         profile?.isLocalPlayer1 = player1Switch.isOn
         if let profile = profile {
             onProfileUpdated?(profile)
         }
-        // Update the switches state in case the profile logic changed them
         player1Switch.isOn = profile?.isLocalPlayer1 ?? false
         player2Switch.isOn = profile?.isLocalPlayer2 ?? false
     }
-    
+
     @objc private func player2SwitchChanged() {
+        if player2Switch.isOn, let profileManager = profileManager {
+            for other in profileManager.getPlayerProfileArray() where other !== profile {
+                other.isLocalPlayer2 = false
+            }
+        }
         profile?.isLocalPlayer2 = player2Switch.isOn
         if let profile = profile {
             onProfileUpdated?(profile)
         }
-        // Update the switches state in case the profile logic changed them
         player1Switch.isOn = profile?.isLocalPlayer1 ?? false
         player2Switch.isOn = profile?.isLocalPlayer2 ?? false
     }
@@ -661,14 +669,19 @@ class EditProfileViewController: UIViewController, UITextFieldDelegate {
         guard let profile = profile,
               let profileManager = profileManager,
               !profile.userName.isEmpty else { return }
-        
+
         // Try to add the profile
         do {
             try profileManager.addPlayerProfile(newProfile: profile)
-            
+
+            // Wire up achievements using the store if available
+            if let store = achievementObserverStore {
+                profile.addAchievementObservers(achievementObservers: store.createInitialisedObserverList())
+            }
+
             // Notify that profile was created
             onProfileUpdated?(profile)
-            
+
             // Pop back to profile list
             navigationController?.popViewController(animated: true)
         } catch {

@@ -12,6 +12,7 @@ class ProfileSelectViewController: UIViewController {
     
     // MARK: - Properties
     var profileManager: PlayerProfileManager?
+    var achievementObserverStore: AchievementObserverStore?
     var nextScreen: MainMenuViewController.ProfileSelectScreenDestination = .editProfileScreen
 
     /// When set, overrides all internal navigation — the closure is called with the selected profile.
@@ -216,6 +217,7 @@ class ProfileSelectViewController: UIViewController {
         let editProfileVC = EditProfileViewController()
         editProfileVC.isCreatingNewProfile = true
         editProfileVC.profileManager = profileManager
+        editProfileVC.achievementObserverStore = achievementObserverStore
         editProfileVC.onProfileUpdated = { [weak self] _ in
             // Reload the collection view when new profile is created
             self?.collectionView.reloadData()

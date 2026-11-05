@@ -44,6 +44,7 @@ class AchievementTableViewController: UIViewController {
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         gradientLayer.frame = view.bounds
+        confettiView?.frame = view.bounds
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -117,9 +118,11 @@ class AchievementTableViewController: UIViewController {
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
 
-        // Confetti
-        confettiView = ConfettiView(frame: CGRect(x: view.frame.width / 2, y: 0, width: 0, height: 0))
+        // Confetti — frame is updated to view.bounds before each start() call so the
+        // emitter spans the full screen width rather than spawning from a single point.
+        confettiView = ConfettiView(frame: view.bounds)
         confettiView.config.particle = .confetti(allowedShapes: Particle.ConfettiShape.all)
+        confettiView.isUserInteractionEnabled = false
         view.addSubview(confettiView)
     }
 
@@ -181,6 +184,7 @@ extension AchievementTableViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         if sourceProfile.achievements[indexPath.row].hasBeenEarned {
+            confettiView.frame = view.bounds
             confettiView.start()
             DispatchQueue.main.asyncAfter(deadline: .now() + confettiDuration) {
                 self.confettiView.stop()
