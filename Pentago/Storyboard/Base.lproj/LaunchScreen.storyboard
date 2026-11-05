@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="23504" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="24765" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="01J-lp-oVM">
     <device id="retina6_12" orientation="portrait" appearance="light"/>
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="23506"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="24743"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
-        <capability name="System colors in document resources" minToolsVersion="11.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <scenes>
@@ -16,20 +15,82 @@
                         <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="circle_pentago_logo_nt" translatesAutoresizingMaskIntoConstraints="NO" id="a1Y-Wh-RQR">
-                                <rect key="frame" x="96.666666666666686" y="326" width="200" height="200"/>
+
+                            <!-- Soft purple glow, top-leading corner -->
+                            <view opaque="NO" userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Orb-01-vw">
+                                <rect key="frame" x="-80" y="-80" width="300" height="300"/>
+                                <color key="backgroundColor" red="0.4" green="0.2" blue="0.9" alpha="0.2" colorSpace="custom" customColorSpace="sRGB"/>
                                 <constraints>
-                                    <constraint firstAttribute="width" constant="200" id="Lhk-dP-zWw"/>
-                                    <constraint firstAttribute="height" constant="200" id="ma2-Im-Pwr"/>
+                                    <constraint firstAttribute="width" constant="300" id="Orb1-w"/>
+                                    <constraint firstAttribute="height" constant="300" id="Orb1-h"/>
+                                </constraints>
+                            </view>
+
+                            <!-- Soft blue glow, bottom-trailing corner -->
+                            <view opaque="NO" userInteractionEnabled="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="Orb-02-vw">
+                                <rect key="frame" x="193" y="572" width="260" height="260"/>
+                                <color key="backgroundColor" red="0.1" green="0.3" blue="0.7" alpha="0.15" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="260" id="Orb2-w"/>
+                                    <constraint firstAttribute="height" constant="260" id="Orb2-h"/>
+                                </constraints>
+                            </view>
+
+                            <!-- Pentago logo -->
+                            <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="circle_pentago_logo" translatesAutoresizingMaskIntoConstraints="NO" id="a1Y-Wh-RQR">
+                                <rect key="frame" x="116.5" y="286" width="160" height="160"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="160" id="Lhk-dP-zWw"/>
+                                    <constraint firstAttribute="height" constant="160" id="ma2-Im-Pwr"/>
                                 </constraints>
                             </imageView>
+
+                            <!-- "PENTAGO" title -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="PENTAGO" textAlignment="center" lineBreakMode="middleTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="TtL-00-TTL">
+                                <rect key="frame" x="40" y="462" width="313" height="54"/>
+                                <fontDescription type="boldSystem" pointSize="46"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+
+                            <!-- Subtitle -->
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Classic Strategy Board Game" textAlignment="center" lineBreakMode="middleTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Sub-00-SUB">
+                                <rect key="frame" x="40" y="524" width="313" height="20"/>
+                                <fontDescription type="system" pointSize="15"/>
+                                <color key="textColor" white="1" alpha="0.6" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+
                         </subviews>
-                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
-                        <color key="backgroundColor" systemColor="systemBackgroundColor"/>
+
+                        <!-- Dark navy matching the app gradient start: UIColor(red:0.1, green:0.2, blue:0.45) -->
+                        <color key="backgroundColor" red="0.1" green="0.2" blue="0.45" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+
                         <constraints>
-                            <constraint firstItem="a1Y-Wh-RQR" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="Ku7-tw-KYx"/>
+                            <!-- Orb 1: top-leading corner (offset outward so it bleeds off-screen) -->
+                            <constraint firstItem="Orb-01-vw" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" constant="-80" id="Orb1-ld"/>
+                            <constraint firstItem="Orb-01-vw" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" constant="-80" id="Orb1-tp"/>
+
+                            <!-- Orb 2: bottom-trailing corner -->
+                            <constraint firstItem="Orb-02-vw" firstAttribute="trailing" secondItem="Ze5-6b-2t3" secondAttribute="trailing" constant="60" id="Orb2-tr"/>
+                            <constraint firstItem="Orb-02-vw" firstAttribute="bottom" secondItem="Ze5-6b-2t3" secondAttribute="bottom" constant="20" id="Orb2-bt"/>
+
+                            <!-- Logo: centred horizontally, 80pt above vertical centre -->
                             <constraint firstItem="a1Y-Wh-RQR" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="c3g-0L-1dW"/>
+                            <constraint firstItem="a1Y-Wh-RQR" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" constant="-80" id="Ku7-tw-KYx"/>
+
+                            <!-- Title: 16pt below logo -->
+                            <constraint firstItem="TtL-00-TTL" firstAttribute="top" secondItem="a1Y-Wh-RQR" secondAttribute="bottom" constant="16" id="TTL-tp"/>
+                            <constraint firstItem="TtL-00-TTL" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" constant="40" id="TTL-ld"/>
+                            <constraint firstItem="TtL-00-TTL" firstAttribute="trailing" secondItem="Ze5-6b-2t3" secondAttribute="trailing" constant="-40" id="TTL-tr"/>
+
+                            <!-- Subtitle: 6pt below title -->
+                            <constraint firstItem="Sub-00-SUB" firstAttribute="top" secondItem="TtL-00-TTL" secondAttribute="bottom" constant="6" id="SUB-tp"/>
+                            <constraint firstItem="Sub-00-SUB" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" constant="40" id="SUB-ld"/>
+                            <constraint firstItem="Sub-00-SUB" firstAttribute="trailing" secondItem="Ze5-6b-2t3" secondAttribute="trailing" constant="-40" id="SUB-tr"/>
                         </constraints>
+
+                        <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="iYj-Kq-Ea1" userLabel="First Responder" sceneMemberID="firstResponder"/>
@@ -38,9 +99,6 @@
         </scene>
     </scenes>
     <resources>
-        <image name="circle_pentago_logo_nt" width="500" height="500"/>
-        <systemColor name="systemBackgroundColor">
-            <color white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
-        </systemColor>
+        <image name="circle_pentago_logo" width="500" height="500"/>
     </resources>
 </document>
